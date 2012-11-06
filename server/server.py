@@ -24,7 +24,7 @@ class FauxPage(object):
             site.pop('asset0')
         else:
             reqsize = int(site.pop('asset0'))
-        out = '<html><head></head><body>' + ''.join(['<img src="/img/%s">'%(size,) for _,size in site.items()])
+        out = '<html><head></head><body>' + ''.join(['<img src="/img/%s">'%(size,) for size in filter(unicode.isdigit, site.values())])
         diff = reqsize - len(out)
         out += '<script>' + ''.join([random.choice(string.letters) for i in xrange(diff)]) + '</script></body></html>'
         return out
