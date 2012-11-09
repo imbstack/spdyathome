@@ -1,0 +1,1 @@
+-e git://github.com/bis12/nbhttp.git@spdy#egg=nbhttp
