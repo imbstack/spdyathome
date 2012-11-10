@@ -6,6 +6,7 @@ import yaml
 import argparse
 from nbhttp import run
 from nbhttp.spdy_server import SpdyServer
+from nbhttp.server import Server
 from serverbase import BaseServer
 
 
@@ -25,14 +26,16 @@ def main():
     spdy_base = BaseServer()
     SpdyServer(host='',
             port=conf['spdy_port'],
-            use_ssl=False,
-            certfile=None,
-            keyfile=None,
             request_handler=spdy_base.handler,
             log=spdy_base.get_logger('SPDY'))
     print 'creating HTTP server on port %d' % (conf['http_port'],)
+    http_base = BaseServer()
+    Server(host='',
+            port=conf['http_port'],
+            request_handler=http_base.handler,
+            log=spdy_base.get_logger('HTTP'))
     run()
-    # TODO: Make HTTP server here too
+    # TODO: Kinda weird usage of (http|spdy)_base?  Think about changing that.
 
 if __name__ == '__main__':
     main()
