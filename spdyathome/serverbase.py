@@ -1,15 +1,16 @@
 """
 Base class for common operations of servers.
 """
-import yaml
+import logging
 
 
 class BaseServer(object):
 
-    def __init__(self, args):
-        conf = yaml.load(file(args.conf_file, 'r'))
-        print conf
+    def handler(self, method, uri, hdrs, res_start, req_pause):
+        print method
+        return '', 'YEP'
 
-    def start(self):
-        print "Starting Server!"
-        self.init()
+    def get_logger(self, name):
+        log = logging.getLogger(name)
+        log.setLevel(logging.INFO)
+        return log

@@ -7,4 +7,4 @@ from serverbase import BaseServer
 class HTTPServer(BaseServer):
 
     def init(self):
-        print "HTTP!"
+        print "starting HTTP server on port %d..." % (self.conf['http_port'],)
