@@ -59,3 +59,15 @@ class BaseServer(object):
         # TODO: Generate this list from a file of top 100, etc.
         res.response_body(json.dumps([1,77,23,11]))
         res.response_done([])
+
+    @util.register(method='GET', path='/site/')
+    def getsite(self, res):
+        headers = []
+        index = int(res.uri.split('/')[-1])
+        res.response_start(200, 'OK', headers)
+        res.response_body("YOU REQUESTED SITE: %d\n" % (index,))
+        res.response_body(json.dumps([1,2,3,4,5]))
+        # TODO: pass in size of original asset to fill_junk (also take into
+        # account asset type for compression reasons!?
+        res.response_body(util.fill_junk(1))
+        res.response_done([])

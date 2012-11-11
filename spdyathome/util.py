@@ -19,4 +19,13 @@ def register(method, path, *args):
 
 
 def make_ident(method, route):
-    return method + '->' + route
+    """
+    For the time being, if a path ends in '/', it expects an argument to follow
+    """
+    # FIXME: This path stuff is dumb. Do this better if time permits
+    parts = route.rstrip('/1234567890')
+    return method + '->' + parts
+
+
+def fill_junk(size):
+    return "THIS SHOULD BE BASED ON THE SIZE OF size"
