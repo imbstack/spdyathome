@@ -5,3 +5,8 @@
 spdy_port: 38090
 # Port for HTTP server to listen on
 http_port: 38091
+
+# Host for assets from primary site
+mainhost: http://localhost
+# Host for assets from secondard site
+secondhost: http://localhost

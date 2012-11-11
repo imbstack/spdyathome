@@ -1,28 +1,58 @@
 """
 Client to run the tests
 """
-import sys
+import json
+import yaml
+import argparse
 from thor import HttpClient
-from thor.events import on
 from thor.loop import stop, run
 
 
-if __name__ == '__main__':
-    httpclient = HttpClient()
-    httpexch = httpclient.exchange()
+def get_args():
+    parser = argparse.ArgumentParser(
+            description='Run HTTP and SPDY clients for test.')
+    parser.add_argument('-c', '-config', type=str, required=True,
+            dest='conf_file', action='store', help='YAML configuration file.')
+    return parser.parse_args()
 
-    @on(httpexch)
-    def response_start(status, phrase, headers):
-        print status
-        print phrase
 
-    httpexch.on('response_body', sys.stdout.write)
+def hello(host):
+    resp = {'text': '', 'sitelist': []}
 
-    @on(httpexch)
-    def response_done(trailers):
-        print
+    def hello_start(status, phrase, headers):
+        if status == '200':
+            print 'Connection Successful!\nDownloading sitelist.'
+
+    def hello_body(chunk):
+        resp['text'] += chunk
+
+    def hello_stop(trailers):
+        resp['sitelist'] = json.loads(resp['text'])
         stop()
 
-    httpexch.request_start('GET', 'http://localhost:38091/hello', [])
-    httpexch.request_done([])
+    httpclient = HttpClient()
+    hello = httpclient.exchange()
+    hello.on('response_start', hello_start)
+    hello.on('response_body', hello_body)
+    hello.on('response_done', hello_stop)
+    uri = host + '/hello'
+    hello.request_start('GET', uri, [])
+    hello.request_done([])
     run()
+    return resp['sitelist']
+
+
+def main():
+    args = get_args()
+    conf = yaml.load(file(args.conf_file, 'r'))
+
+    mainhost_http = conf['mainhost'] + ':' + str(conf['http_port'])
+    mainhost_spdy = conf['mainhost'] + ':' + str(conf['spdy_port'])
+    secondhost_http = conf['secondhost'] + ':' + str(conf['http_port'])
+    secondost_spdy = conf['secondhost'] + ':' + str(conf['spdy_port'])
+
+    sites = hello(mainhost_http)
+    print sites
+
+if __name__ == '__main__':
+    main()
