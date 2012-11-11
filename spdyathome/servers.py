@@ -4,9 +4,9 @@ Use the standard request responders in BaseServer.
 """
 import yaml
 import argparse
-from nbhttp import run
-from nbhttp.spdy_server import SpdyServer
-from nbhttp.server import Server
+from thor.loop import run
+#from thor import SpdyServer
+from thor import HttpServer
 from serverbase import BaseServer
 
 
@@ -22,18 +22,15 @@ def get_args():
 def main():
     args = get_args()
     conf = yaml.load(file(args.conf_file, 'r'))
-    print 'creating SPDY server on port %d' % (conf['spdy_port'],)
-    spdy_base = BaseServer()
-    SpdyServer(host='',
-            port=conf['spdy_port'],
-            request_handler=spdy_base.handler,
-            log=spdy_base.get_logger('SPDY'))
+    # TODO: Make SpdyServer the same way as HttpServer
+    #print 'creating SPDY server on port %d' % (conf['spdy_port'],)
+    #spdy_base = BaseServer()
+    #spdy_serve = SpdyServer(host='', port=conf['spdy_port'])
+    #spdy_serve.on('exchange', spdy_base.handler)
     print 'creating HTTP server on port %d' % (conf['http_port'],)
     http_base = BaseServer()
-    Server(host='',
-            port=conf['http_port'],
-            request_handler=http_base.handler,
-            log=spdy_base.get_logger('HTTP'))
+    http_serve = HttpServer(host='', port=conf['http_port'])
+    http_serve.on('exchange', http_base.handler)
     run()
     # TODO: Kinda weird usage of (http|spdy)_base?  Think about changing that.
 
