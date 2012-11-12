@@ -10,3 +10,8 @@ http_port: 38091
 mainhost: http://localhost
 # Host for assets from secondard site
 secondhost: http://localhost
+
+# File containing asset information for each site
+sitedump: data/sitedump.json
+# File containing the list of sites to access during each test
+sitelist: data/sitelist.txt
