@@ -66,7 +66,34 @@ def siteget(http1, http2, spdy1, spdy2, site):
     get.request_start('GET', uri, [])
     get.request_done([])
     run()
-    print resp['assetlist']
+    return resp['assetlist']
+
+
+def assetget(http1, http2, spdy1, spdy2, asset):
+    resp = {'text': ''}
+
+    def asset_start(status, phrase, headers):
+        if status != '200':
+            print 'Connection Failed: ' + asset
+            print status
+            print phrase
+
+    def asset_body(chunk):
+        resp['text'] += chunk
+
+    def asset_stop(trailers):
+        stop()
+
+    # TODO: Make this do both clients http and spdy
+    httpclient = HttpClient()
+    get = httpclient.exchange()
+    get.on('response_start', asset_start)
+    get.on('response_body', asset_body)
+    get.on('response_done', asset_stop)
+    uri = http1 + '/asset/' + asset
+    get.request_start('GET', uri, [])
+    get.request_done([])
+    run()
 
 
 def main():
@@ -79,12 +106,22 @@ def main():
     secondhost_spdy = conf['secondhost'] + ':' + str(conf['spdy_port'])
 
     sites = hello(mainhost_http)
-    for site in sites:
-        siteget(mainhost_http,
+    for i,site in enumerate(sites):
+        print i
+        assets = siteget(mainhost_http,
                 secondhost_http,
                 mainhost_spdy,
                 secondhost_spdy,
                 site)
+        for asset in assets:
+            assetget(mainhost_http,
+                    secondhost_http,
+                    mainhost_spdy,
+                    secondhost_spdy,
+                    asset)
+
+# FIXME: This might not be reusing connections for SPDY!  Fix that.
+
 
 if __name__ == '__main__':
     main()

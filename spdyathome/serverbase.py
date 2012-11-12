@@ -9,16 +9,11 @@ from thor.events import on
 
 class BaseServer(object):
 
-    def __init__(self):
+    def __init__(self, conf):
         self.paths = {}
         util.register_all(self)
-
-    #def handler(self, method, uri, hdrs, res_start, req_pause):
-
-    #    self.paths.get(util.make_ident(method, uri), self.fourohfour)(res_start)
-
-    #    # FIXME: The following are totally not the right thing to return
-    #    return lambda x: x, lambda y: y
+        self.sites = json.loads(open(conf['sitedump'], 'r').read())
+        self.sitelist = util.load_list(conf['sitelist'])
 
     def handler(self, x):
         @on(x, 'request_start')
@@ -54,10 +49,9 @@ class BaseServer(object):
     @util.register(method='GET', path='/hello')
     def gethello(self, res):
         headers = []
-        # FIXME: This should not have none for pause
         res.response_start(200, 'OK', headers)
         # TODO: Generate this list from a file of top 100, etc.
-        res.response_body(json.dumps([1,77,23,11]))
+        res.response_body(json.dumps(self.sitelist))
         res.response_done([])
 
     """
@@ -68,10 +62,28 @@ class BaseServer(object):
         headers = []
         index = int(res.uri.split('/')[-1])
         data = {'index': index}
-        data['list'] = [1,2,3,43,5]
+        data['list'] = util.make_assets(self.sites[str(index)])
         # TODO: pass in size of original asset to fill_junk (also take into
         # account asset type for compression reasons!?
         data['junk'] = util.fill_junk(1)
         res.response_start(200, 'OK', headers)
         res.response_body(json.dumps(data))
+        res.response_done([])
+
+    """
+    For a given asset, return a blob that is the size of the asset.
+    Take into account compressibility.
+    """
+    @util.register(method='GET', path='/asset/')
+    def getasset(self, res):
+        headers = []
+        asset = res.uri.split('/')[-1]
+        size, comp = asset.split('.')
+        size = int(size)
+        # FIXME: This is not necessarily what the compression factor should be
+        if comp == 'c':
+            size *= 0.7
+        junk = util.fill_junk(size)
+        res.response_start(200, 'OK', headers)
+        res.response_body(junk)
         res.response_done([])
