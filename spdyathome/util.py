@@ -1,6 +1,8 @@
 """
 General purpose helpers and decorators
 """
+import random
+import string
 
 
 def register_all(cls):
@@ -28,7 +30,7 @@ def make_ident(method, route):
 
 
 def fill_junk(size):
-    return "THIS SHOULD BE BASED ON THE SIZE OF size"
+    return ''.join([random.choice(string.letters) for i in xrange(size)])
 
 
 def load_list(f):

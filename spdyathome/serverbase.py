@@ -12,8 +12,11 @@ class BaseServer(object):
     def __init__(self, conf):
         self.paths = {}
         util.register_all(self)
-        self.sites = json.loads(open(conf['sitedump'], 'r').read())
         self.sitelist = util.load_list(conf['sitelist'])
+        self.sites = {}
+        for i,line in enumerate(open(conf['sitedump'], 'r')):
+            if str(i) in self.sitelist:
+                self.sites[str(i)] = json.loads(line)
 
     def handler(self, x):
         @on(x, 'request_start')
@@ -36,7 +39,6 @@ class BaseServer(object):
 
     # HTTP verbs and paths below
 
-    # FIXME: This sort of situation should return status code 404, not 200!
     def fourohfour(self, res):
         headers = []
         res.response_start(404, 'Error Not Found', headers)
@@ -50,7 +52,6 @@ class BaseServer(object):
     def gethello(self, res):
         headers = []
         res.response_start(200, 'OK', headers)
-        # TODO: Generate this list from a file of top 100, etc.
         res.response_body(json.dumps(self.sitelist))
         res.response_done([])
 
@@ -62,10 +63,20 @@ class BaseServer(object):
         headers = []
         index = int(res.uri.split('/')[-1])
         data = {'index': index}
-        data['list'] = util.make_assets(self.sites[str(index)])
-        # TODO: pass in size of original asset to fill_junk (also take into
-        # account asset type for compression reasons!?
-        data['junk'] = util.fill_junk(1)
+        try:
+            site = self.sites[str(index)]
+        except KeyError:
+            self.fourohfour(res)
+            return
+        if int(site['assets']['asset0']['size']) == 0:
+            reqsize = int(site['assets'].pop('asset1'))
+            site['assets'].pop('asset0')
+        else:
+            reqsize = int(site['assets'].pop('asset0')['size'])
+        data['list'] = util.make_assets(site)
+        print reqsize
+        print len(str(data))
+        data['junk'] = util.fill_junk(reqsize - len(str(data)))
         res.response_start(200, 'OK', headers)
         res.response_body(json.dumps(data))
         res.response_done([])

@@ -5,6 +5,7 @@ import json
 import yaml
 import argparse
 from thor import HttpClient
+from thor import SpdyClient
 from thor.loop import stop, run
 
 
