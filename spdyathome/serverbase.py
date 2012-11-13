@@ -94,7 +94,7 @@ class BaseServer(object):
         # FIXME: This is not necessarily what the compression factor should be
         if comp == 'c':
             size *= 0.7
-        junk = util.fill_junk(size)
+        junk = util.fill_junk(int(size))
         res.response_start(200, 'OK', headers)
         res.response_body(junk)
         res.response_done([])
