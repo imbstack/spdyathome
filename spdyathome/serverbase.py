@@ -2,6 +2,7 @@
 Base class for common operations of servers.
 """
 import util
+import copy
 import json
 from thor.events import on
 from nbhttp.http_common import dummy
@@ -68,7 +69,7 @@ class BaseServer(object):
         index = int(res.uri.split('/')[-1])
         data = {'index': index}
         try:
-            site = self.sites[str(index)]
+            site = copy.deepcopy(self.sites[str(index)])
         except KeyError:
             self.fourohfour(res)
             return

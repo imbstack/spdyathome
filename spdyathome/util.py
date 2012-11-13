@@ -42,11 +42,14 @@ def load_list(f):
 
 def make_assets(site):
     assets = []
-    # TODO: Take into account remote or local site!
     for asset in site['assets'].values():
         if asset['compressible']:
             trailer = '.c'
         else:
             trailer = '.u'
-        assets.append(str(asset['size']) + trailer)
+        if asset['remote']:
+            header = 'host2/'
+        else:
+            header = 'host1/'
+        assets.append(header + str(asset['size']) + trailer)
     return assets

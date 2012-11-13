@@ -5,8 +5,8 @@ import json
 import yaml
 import argparse
 from thor import HttpClient
-from thor import SpdyClient
 from thor.loop import stop, run
+from nbhttp.spdy_client import SpdyClient
 
 
 def get_args():
@@ -18,6 +18,7 @@ def get_args():
 
 
 def hello(host):
+    # TODO: Add id from server to all headers!
     resp = {'text': '', 'sitelist': []}
 
     def hello_start(status, phrase, headers):
@@ -43,7 +44,7 @@ def hello(host):
     return resp['sitelist']
 
 
-def siteget(http1, http2, spdy1, spdy2, site):
+def http_siteget(http1, http2, site):
     resp = {'text': '', 'assetlist': []}
 
     def site_start(status, phrase, headers):
@@ -67,10 +68,12 @@ def siteget(http1, http2, spdy1, spdy2, site):
     get.request_start('GET', uri, [])
     get.request_done([])
     run()
-    return resp['assetlist']
+    for asset in resp['assetlist']:
+        # TODO: consider doing this with 4-6 connections?
+        http_assetget(http1, http2, asset)
 
 
-def assetget(http1, http2, spdy1, spdy2, asset):
+def http_assetget(http1, http2, asset):
     resp = {'text': ''}
 
     def asset_start(status, phrase, headers):
@@ -91,10 +94,22 @@ def assetget(http1, http2, spdy1, spdy2, asset):
     get.on('response_start', asset_start)
     get.on('response_body', asset_body)
     get.on('response_done', asset_stop)
-    uri = http1 + '/asset/' + asset
+    parts = asset.split('/')
+    if parts[0] == 'host1':
+        uri = http1 + '/asset/' + parts[1]
+    else:
+        uri = http2 + '/asset/' + parts[1]
     get.request_start('GET', uri, [])
     get.request_done([])
     run()
+
+
+def spdy_siteget(spdy1, spdy2, site):
+    raise NotImplemented
+
+
+def spdy_assetget(spdy1, spdy2, asset):
+    raise NotImplemented
 
 
 def main():
@@ -109,17 +124,12 @@ def main():
     sites = hello(mainhost_http)
     for i,site in enumerate(sites):
         print i
-        assets = siteget(mainhost_http,
+        http_siteget(mainhost_http,
                 secondhost_http,
-                mainhost_spdy,
-                secondhost_spdy,
                 site)
-        for asset in assets:
-            assetget(mainhost_http,
-                    secondhost_http,
-                    mainhost_spdy,
-                    secondhost_spdy,
-                    asset)
+        #spdy_siteget(mainhost_spdy,
+        #        secondhost_spdy,
+        #        site)
 
 # FIXME: This might not be reusing connections for SPDY!  Fix that.
 
