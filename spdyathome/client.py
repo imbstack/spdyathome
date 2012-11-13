@@ -71,10 +71,10 @@ def http_siteget(http1, http2, site):
     run()
     for asset in resp['assetlist']:
         # TODO: consider doing this with 4-6 connections?
-        http_assetget(http1, http2, asset)
+        http_assetget(httpclient, http1, http2, asset)
 
 
-def http_assetget(http1, http2, asset):
+def http_assetget(httpclient, http1, http2, asset):
     resp = {'text': ''}
 
     def asset_start(status, phrase, headers):
@@ -89,8 +89,6 @@ def http_assetget(http1, http2, asset):
     def asset_stop(trailers):
         stop()
 
-    # TODO: Make this do both clients http and spdy
-    httpclient = HttpClient()
     get = httpclient.exchange()
     get.on('response_start', asset_start)
     get.on('response_body', asset_body)
@@ -107,7 +105,6 @@ def http_assetget(http1, http2, asset):
 
 def spdy_siteget(spdy1, spdy2, site):
     resp = {'text': '', 'assetlist': []}
-    c = SpdyClient()
 
     def get(version, status, phrase, headers, res_pause):
 
@@ -127,10 +124,33 @@ def spdy_siteget(spdy1, spdy2, site):
     req_body_write, req_done = c.req_start('GET', uri, [], get, dummy)
     req_done(None)
     push_tcp.run()
+    #for asset in resp['assetlist']:
+    #    spdy_assetget(c, spdy1, spdy2, asset)
 
 
-def spdy_assetget(spdy1, spdy2, asset):
-    raise NotImplemented
+def spdy_assetget(spdyclient, spdy1, spdy2, asset):
+    resp = {'text': ''}
+
+    def get(version, status, phrase, headers, res_pause):
+
+        def body(chunk):
+            resp['text'] += chunk
+
+        def done(err):
+            if err:
+                print 'Connection Failed: ' + asset
+            push_tcp.stop()
+
+        return body, done
+
+    parts = asset.split('/')
+    if parts[0] == 'host1':
+        uri = spdy1 + '/asset/' + parts[1]
+    else:
+        uri = spdy2 + '/asset/' + parts[1]
+    req_body_write, req_done = spdyclient.req_start('GET', uri, [], get, dummy)
+    req_done(None)
+    push_tcp.run()
 
 
 def main():

@@ -72,7 +72,22 @@ class resmap(object):
         self.uri = uri
 
     def response_start(self, code, phrase, headers):
-        self.response_body, self.response_done = self.func(code,
+        x, y = self.func(code,
                 phrase,
                 headers,
                 dummy)
+        self.response_body = self.resp_body_wrap(x)
+        self.response_done = self.resp_done_wrap(y)
+
+    def resp_body_wrap(self, func):
+        def wrap(body):
+            print "HEY< BPODY"
+            print body
+            func(body)
+        return wrap
+
+    def resp_done_wrap(self, func):
+        def wrap(body):
+            print "HEY DOINE!"
+            func(body)
+        return wrap

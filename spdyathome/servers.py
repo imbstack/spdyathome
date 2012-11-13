@@ -11,6 +11,9 @@ from nbhttp import push_tcp
 from thor import HttpServer
 from serverbase import BaseServer
 from multiprocessing import Process
+from thor.events import on
+import urilib
+import util
 
 
 def get_args():
@@ -27,8 +30,23 @@ def http_main(cfile):
     print 'Loading configuration into http base server!'
     base = BaseServer(conf)
     print 'creating HTTP server on port %d' % (conf['http_port'],)
+
+    def http_handler(x):
+        @on(x, 'request_start')
+        def go(*args):
+            print "HTTP: start %s" % (str(args[1]),)
+            base.paths.get(util.make_ident(x.method, x.uri), base.fourohfour)(x)
+
+        @on(x, 'request_body')
+        def body(chunk):
+            print "body: %s" % chunk
+
+        @on(x, 'request_done')
+        def done(trailers):
+            print "done: %s" % str(trailers)
+
     http_serve = HttpServer(host='', port=conf['http_port'])
-    http_serve.on('exchange', base.http_handler)
+    http_serve.on('exchange', http_handler)
     run()
 
 
@@ -38,7 +56,22 @@ def spdy_main(cfile):
     print 'Loading configuration into spdy base server!'
     base = BaseServer(conf)
     print 'creating SPDY server on port %d' % (conf['spdy_port'],)
-    SpdyServer('0.0.0.0', conf['spdy_port'], base.spdy_handler, log)
+
+    def spdy_handler(method, uri, hdrs, res_start, req_pause):
+        path = urilib.URI(uri).path
+        print "SPDY: start %s" % (path,)
+        met = base.paths.get(util.make_ident(method, path), base.fourohfour)
+        met(util.resmap(res_start, uri))
+
+        def body(chunk):
+            print "body: %s" % chunk
+
+        def done(trailers):
+            print "done: %s" % str(trailers)
+
+        return  body, done
+
+    SpdyServer('0.0.0.0', conf['spdy_port'], spdy_handler, log)
     push_tcp.run()
 
 if __name__ == '__main__':

@@ -4,9 +4,6 @@ Base class for common operations of servers.
 import util
 import copy
 import json
-from thor.events import on
-from nbhttp.http_common import dummy
-import urilib
 
 
 class BaseServer(object):
@@ -19,26 +16,6 @@ class BaseServer(object):
         for i,line in enumerate(open(conf['sitedump'], 'r')):
             if str(i) in self.sitelist:
                 self.sites[str(i)] = json.loads(line)
-
-    def spdy_handler(self, method, uri, hdrs, res_start, req_pause):
-        path = urilib.URI(uri).path
-        met = self.paths.get(util.make_ident(method, path), self.fourohfour)
-        met(util.resmap(res_start, uri))
-        return dummy, dummy
-
-    def http_handler(self, x):
-        @on(x, 'request_start')
-        def go(*args):
-            print "start: %s on %s" % (str(args[1]), id(x.http_conn))
-            self.paths.get(util.make_ident(x.method, x.uri), self.fourohfour)(x)
-
-        @on(x, 'request_body')
-        def body(chunk):
-            print "body: %s" % chunk
-
-        @on(x, 'request_done')
-        def done(trailers):
-            print "done: %s" % str(trailers)
 
     # HTTP verbs and paths below
 
@@ -77,8 +54,6 @@ class BaseServer(object):
         else:
             reqsize = int(site['assets'].pop('asset0')['size'])
         data['list'] = util.make_assets(site)
-        print reqsize
-        print len(str(data))
         data['junk'] = util.fill_junk(reqsize - len(str(data)))
         res.response_start(200, 'OK', headers)
         res.response_body(json.dumps(data))
