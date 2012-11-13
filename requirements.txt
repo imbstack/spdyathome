@@ -1,2 +1,3 @@
 pyyaml >= 3.09
 -e git://github.com/bis12/thor.git@spdy#egg=thor
+-e git://github.com/bis12/nbhttp.git@spdy#egg=nbhttp

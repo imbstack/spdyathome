@@ -1,10 +1,10 @@
 """
 Base class for common operations of servers.
 """
-import logging
 import util
 import json
 from thor.events import on
+from nbhttp.http_common import dummy
 
 
 class BaseServer(object):
@@ -18,7 +18,16 @@ class BaseServer(object):
             if str(i) in self.sitelist:
                 self.sites[str(i)] = json.loads(line)
 
-    def handler(self, x):
+    def spdy_handler(self, method, uri, hdrs, res_start, req_pause):
+        code = "200"
+        phrase = "OK"
+        res_hdrs = [('Content-Type', 'text/plain'), ('version', 'HTTP/1.1')]
+        res_body, res_done = res_start(code, phrase, res_hdrs, dummy)
+        res_body('This is SPDY.')
+        res_done(None)
+        return dummy, dummy
+
+    def http_handler(self, x):
         @on(x, 'request_start')
         def go(*args):
             print "start: %s on %s" % (str(args[1]), id(x.http_conn))
@@ -31,11 +40,6 @@ class BaseServer(object):
         @on(x, 'request_done')
         def done(trailers):
             print "done: %s" % str(trailers)
-
-    def get_logger(self, name):
-        log = logging.getLogger(name)
-        log.setLevel(logging.INFO)
-        return log
 
     # HTTP verbs and paths below
 

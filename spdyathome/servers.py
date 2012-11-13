@@ -5,9 +5,11 @@ Use the standard request responders in BaseServer.
 import yaml
 import argparse
 from thor.loop import run
-#from thor import SpdyServer
+from nbhttp.spdy_server import SpdyServer
+from nbhttp import push_tcp
 from thor import HttpServer
 from serverbase import BaseServer
+from multiprocessing import Process
 
 
 def get_args():
@@ -19,21 +21,29 @@ def get_args():
     return parser.parse_args()
 
 
-def main():
-    args = get_args()
+def http_main(cfile):
     conf = yaml.load(file(args.conf_file, 'r'))
-    print 'Loading configuration into base server!'
+    print 'Loading configuration into http base server!'
     base = BaseServer(conf)
-    # TODO: Make SpdyServer the same way as HttpServer
-    #print 'creating SPDY server on port %d' % (conf['spdy_port'],)
-    #spdy_base = BaseServer()
-    #spdy_serve = SpdyServer(host='', port=conf['spdy_port'])
-    #spdy_serve.on('exchange', base.handler)
     print 'creating HTTP server on port %d' % (conf['http_port'],)
     http_serve = HttpServer(host='', port=conf['http_port'])
-    http_serve.on('exchange', base.handler)
+    http_serve.on('exchange', base.http_handler)
     run()
-    # TODO: Kinda weird usage of (http|spdy)_base?  Think about changing that.
+
+
+def spdy_main(cfile):
+    conf = yaml.load(file(args.conf_file, 'r'))
+    print 'Loading configuration into spdy base server!'
+    base = BaseServer(conf)
+    print 'creating SPDY server on port %d' % (conf['spdy_port'],)
+    SpdyServer('', conf['spdy_port'], base.spdy_handler)
+    push_tcp.run()
 
 if __name__ == '__main__':
-    main()
+    args = get_args()
+    spdy = Process(target=spdy_main, args=(args.conf_file,))
+    spdy.start()
+    http = Process(target=http_main, args=(args.conf_file,))
+    http.start()
+    spdy.join()
+    http.join()
