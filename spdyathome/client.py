@@ -7,6 +7,8 @@ import argparse
 from thor import HttpClient
 from thor.loop import stop, run
 from nbhttp.spdy_client import SpdyClient
+from nbhttp import push_tcp
+from nbhttp.http_common import dummy
 
 
 def get_args():
@@ -58,7 +60,6 @@ def http_siteget(http1, http2, site):
         resp['assetlist'] = json.loads(resp['text'])['list']
         stop()
 
-    # TODO: Make this do both clients http and spdy
     httpclient = HttpClient()
     get = httpclient.exchange()
     get.on('response_start', site_start)
@@ -105,7 +106,27 @@ def http_assetget(http1, http2, asset):
 
 
 def spdy_siteget(spdy1, spdy2, site):
-    raise NotImplemented
+    resp = {'text': '', 'assetlist': []}
+    c = SpdyClient()
+
+    def get(version, status, phrase, headers, res_pause):
+
+        def body(chunk):
+            resp['text'] += chunk
+
+        def done(err):
+            if err:
+                print 'Connection Failed: ' + site
+            resp['assetlist'] = json.loads(resp['text'])['list']
+            push_tcp.stop()
+
+        return body, done
+
+    c = SpdyClient()
+    uri = spdy1 + '/site/' + str(site)
+    req_body_write, req_done = c.req_start('GET', uri, [], get, dummy)
+    req_done(None)
+    push_tcp.run()
 
 
 def spdy_assetget(spdy1, spdy2, asset):
@@ -127,9 +148,9 @@ def main():
         http_siteget(mainhost_http,
                 secondhost_http,
                 site)
-        #spdy_siteget(mainhost_spdy,
-        #        secondhost_spdy,
-        #        site)
+        spdy_siteget(mainhost_spdy,
+                secondhost_spdy,
+                site)
 
 # FIXME: This might not be reusing connections for SPDY!  Fix that.
 

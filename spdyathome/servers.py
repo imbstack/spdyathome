@@ -3,6 +3,7 @@ Start the basic nbhttp servers for each case of connection.
 Use the standard request responders in BaseServer.
 """
 import yaml
+import logging
 import argparse
 from thor.loop import run
 from nbhttp.spdy_server import SpdyServer
@@ -22,7 +23,7 @@ def get_args():
 
 
 def http_main(cfile):
-    conf = yaml.load(file(args.conf_file, 'r'))
+    conf = yaml.load(file(cfile, 'r'))
     print 'Loading configuration into http base server!'
     base = BaseServer(conf)
     print 'creating HTTP server on port %d' % (conf['http_port'],)
@@ -32,11 +33,12 @@ def http_main(cfile):
 
 
 def spdy_main(cfile):
-    conf = yaml.load(file(args.conf_file, 'r'))
+    conf = yaml.load(file(cfile, 'r'))
+    log = logging.getLogger('SPDY')
     print 'Loading configuration into spdy base server!'
     base = BaseServer(conf)
     print 'creating SPDY server on port %d' % (conf['spdy_port'],)
-    SpdyServer('', conf['spdy_port'], base.spdy_handler)
+    SpdyServer('0.0.0.0', conf['spdy_port'], base.spdy_handler, log)
     push_tcp.run()
 
 if __name__ == '__main__':
