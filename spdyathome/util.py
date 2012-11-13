@@ -3,6 +3,7 @@ General purpose helpers and decorators
 """
 import random
 import string
+from nbhttp.http_common import dummy
 
 
 def register_all(cls):
@@ -26,6 +27,15 @@ def make_ident(method, route):
     """
     # FIXME: This path stuff is dumb. Do this better if time permits
     parts = route.rstrip('/1234567890.cu')
+    return method + '->' + parts
+
+
+def make_ident_spdy(method, route):
+    """
+    For the time being, if a path ends in '/', it expects an argument to follow
+    """
+    # FIXME: This path stuff is dumb. Do this better if time permits
+    parts = route.rstrip('/1234567890.cu').split('/')[-1]
     return method + '->' + parts
 
 
@@ -53,3 +63,16 @@ def make_assets(site):
             header = 'host1/'
         assets.append(header + str(asset['size']) + trailer)
     return assets
+
+
+class resmap(object):
+
+    def __init__(self, func, uri):
+        self.func = func
+        self.uri = uri
+
+    def response_start(self, code, phrase, headers):
+        self.response_body, self.response_done = self.func(code,
+                phrase,
+                headers,
+                dummy)

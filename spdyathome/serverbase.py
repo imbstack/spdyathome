@@ -6,6 +6,7 @@ import copy
 import json
 from thor.events import on
 from nbhttp.http_common import dummy
+import urilib
 
 
 class BaseServer(object):
@@ -20,12 +21,9 @@ class BaseServer(object):
                 self.sites[str(i)] = json.loads(line)
 
     def spdy_handler(self, method, uri, hdrs, res_start, req_pause):
-        code = "200"
-        phrase = "OK"
-        res_hdrs = [('Content-Type', 'text/plain'), ('version', 'HTTP/1.1')]
-        res_body, res_done = res_start(code, phrase, res_hdrs, dummy)
-        res_body('This is SPDY.')
-        res_done(None)
+        path = urilib.URI(uri).path
+        met = self.paths.get(util.make_ident(method, path), self.fourohfour)
+        met(util.resmap(res_start, uri))
         return dummy, dummy
 
     def http_handler(self, x):

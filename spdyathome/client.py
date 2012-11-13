@@ -145,9 +145,9 @@ def main():
     sites = hello(mainhost_http)
     for i,site in enumerate(sites):
         print i
-        http_siteget(mainhost_http,
-                secondhost_http,
-                site)
+        #http_siteget(mainhost_http,
+        #        secondhost_http,
+        #        site)
         spdy_siteget(mainhost_spdy,
                 secondhost_spdy,
                 site)
