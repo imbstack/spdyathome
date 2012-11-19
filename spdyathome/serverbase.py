@@ -49,7 +49,7 @@ class BaseServer(object):
             self.fourohfour(res)
             return
         if int(site['assets']['asset0']['size']) == 0:
-            reqsize = int(site['assets'].pop('asset1'))
+            reqsize = int(site['assets'].pop('asset1', {'size':0})['size'])
             site['assets'].pop('asset0')
         else:
             reqsize = int(site['assets'].pop('asset0')['size'])

@@ -81,13 +81,10 @@ class resmap(object):
 
     def resp_body_wrap(self, func):
         def wrap(body):
-            print "HEY< BPODY"
-            print body
             func(body)
         return wrap
 
     def resp_done_wrap(self, func):
         def wrap(body):
-            print "HEY DOINE!"
             func(body)
         return wrap

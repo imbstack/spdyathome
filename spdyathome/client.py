@@ -2,6 +2,7 @@
 Client to run the tests
 """
 import json
+import time
 import yaml
 import argparse
 from thor import HttpClient
@@ -46,6 +47,33 @@ def hello(host):
     return resp['sitelist']
 
 
+def collect(host, data):
+
+    import ipdb; ipdb.set_trace()
+    def collect_start(status, phrase, headers):
+        print status, phrase, headers
+        if status != '200':
+            print 'Connection unsuccessful.'
+
+    def collect_body(chunk):
+        print chunk
+
+    def collect_stop(trailers):
+        print 'Finished!'
+        stop()
+
+    httpclient = HttpClient()
+    collect = httpclient.exchange()
+    collect.on('response_start', collect_start)
+    collect.on('response_body', collect_body)
+    collect.on('response_done', collect_stop)
+    collect.request_start('GET', host, [])
+    collect.request_body(data)
+    collect.request_done([])
+    run()
+    return "Upload Complete"
+
+
 def http_siteget(http1, http2, site):
     resp = {'text': '', 'assetlist': []}
 
@@ -60,6 +88,7 @@ def http_siteget(http1, http2, site):
         resp['assetlist'] = json.loads(resp['text'])['list']
         stop()
 
+    t0 = time.time()
     httpclient = HttpClient()
     get = httpclient.exchange()
     get.on('response_start', site_start)
@@ -71,10 +100,11 @@ def http_siteget(http1, http2, site):
     run()
     for asset in resp['assetlist']:
         # TODO: consider doing this with 4-6 connections?
-        http_assetget(httpclient, http1, http2, asset)
+        http_assetget(http1, http2, asset)
+    return time.time() - t0
 
 
-def http_assetget(httpclient, http1, http2, asset):
+def http_assetget(http1, http2, asset):
     resp = {'text': ''}
 
     def asset_start(status, phrase, headers):
@@ -89,6 +119,7 @@ def http_assetget(httpclient, http1, http2, asset):
     def asset_stop(trailers):
         stop()
 
+    httpclient = HttpClient()
     get = httpclient.exchange()
     get.on('response_start', asset_start)
     get.on('response_body', asset_body)
@@ -161,16 +192,25 @@ def main():
     mainhost_spdy = conf['mainhost'] + ':' + str(conf['spdy_port'])
     secondhost_http = conf['secondhost'] + ':' + str(conf['http_port'])
     secondhost_spdy = conf['secondhost'] + ':' + str(conf['spdy_port'])
+    mainhost_collect = conf['mainhost'] + ':' + str(conf['capture_port'])
 
+    times = {}
     sites = hello(mainhost_http)
     for i,site in enumerate(sites):
         print i
-        #http_siteget(mainhost_http,
-        #        secondhost_http,
-        #        site)
-        spdy_siteget(mainhost_spdy,
-                secondhost_spdy,
+        http_delta = http_siteget(mainhost_http,
+                secondhost_http,
                 site)
+        #spdy_siteget(mainhost_spdy,
+        #        secondhost_spdy,
+        #        site)
+        times[site] = {}
+        times[site]['http'] = http_delta
+        #times[site]['spdy'] = spdy_delta
+
+    print 'Testing complete:  Uploading data'
+    result = collect(mainhost_collect, json.dumps(times))
+    print result
 
 # FIXME: This might not be reusing connections for SPDY!  Fix that.
 
