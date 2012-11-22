@@ -80,7 +80,6 @@ def capture_main(conf):
 
     def capture_handler(x):
         up = {'inp': '', 'final': {}}
-        print 'qqqqqq'
 
         @on(x, 'request_start')
         def go(*args):
@@ -88,7 +87,6 @@ def capture_main(conf):
 
         @on(x, 'request_body')
         def body(chunk):
-            print 'aaaaaaaaaaaaaaaaaaaaaaaaa'
             up['inp'] += chunk
 
         @on(x, 'request_done')
@@ -97,6 +95,9 @@ def capture_main(conf):
                 f.write(up['inp'])
                 f.close()
             print 'finished capture'
+            x.response_start(200, 'OK', [])
+            x.response_done([])
+            # TODO: Remove out/ from git!
 
     capture_serve = HttpServer(host='', port=conf['capture_port'])
     capture_serve.on('exchange', capture_handler)

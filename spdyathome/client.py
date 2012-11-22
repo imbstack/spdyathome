@@ -6,10 +6,8 @@ import time
 import yaml
 import argparse
 from thor import HttpClient
+from thor import SpdyClient
 from thor.loop import stop, run
-from nbhttp.spdy_client import SpdyClient
-from nbhttp import push_tcp
-from nbhttp.http_common import dummy
 
 
 def get_args():
@@ -49,17 +47,17 @@ def hello(host):
 
 def collect(host, data):
 
-    import ipdb; ipdb.set_trace()
     def collect_start(status, phrase, headers):
         print status, phrase, headers
         if status != '200':
-            print 'Connection unsuccessful.'
+            print 'Uploading data...'
 
     def collect_body(chunk):
-        print chunk
+        pass
+        #print chunk
 
     def collect_stop(trailers):
-        print 'Finished!'
+        #print 'Finished!'
         stop()
 
     httpclient = HttpClient()
@@ -67,6 +65,7 @@ def collect(host, data):
     collect.on('response_start', collect_start)
     collect.on('response_body', collect_body)
     collect.on('response_done', collect_stop)
+    # TODO: Make this a POST
     collect.request_start('GET', host, [])
     collect.request_body(data)
     collect.request_done([])
@@ -74,7 +73,7 @@ def collect(host, data):
     return "Upload Complete"
 
 
-def http_siteget(http1, http2, site):
+def http_siteget(http1, http2, site, httpclient):
     resp = {'text': '', 'assetlist': []}
 
     def site_start(status, phrase, headers):
@@ -89,7 +88,6 @@ def http_siteget(http1, http2, site):
         stop()
 
     t0 = time.time()
-    httpclient = HttpClient()
     get = httpclient.exchange()
     get.on('response_start', site_start)
     get.on('response_body', site_body)
@@ -100,11 +98,11 @@ def http_siteget(http1, http2, site):
     run()
     for asset in resp['assetlist']:
         # TODO: consider doing this with 4-6 connections?
-        http_assetget(http1, http2, asset)
+        http_assetget(http1, http2, asset, httpclient)
     return time.time() - t0
 
 
-def http_assetget(http1, http2, asset):
+def http_assetget(http1, http2, asset, httpclient):
     resp = {'text': ''}
 
     def asset_start(status, phrase, headers):
@@ -119,7 +117,6 @@ def http_assetget(http1, http2, asset):
     def asset_stop(trailers):
         stop()
 
-    httpclient = HttpClient()
     get = httpclient.exchange()
     get.on('response_start', asset_start)
     get.on('response_body', asset_body)
@@ -137,51 +134,62 @@ def http_assetget(http1, http2, asset):
 def spdy_siteget(spdy1, spdy2, site):
     resp = {'text': '', 'assetlist': []}
 
-    def get(version, status, phrase, headers, res_pause):
+    def site_start(status, phrase, headers):
+        if status != '200':
+            print 'Connection Failed: ' + site
 
-        def body(chunk):
-            resp['text'] += chunk
+    def site_body(chunk):
+        resp['text'] += chunk
 
-        def done(err):
-            if err:
-                print 'Connection Failed: ' + site
-            resp['assetlist'] = json.loads(resp['text'])['list']
-            push_tcp.stop()
+    def site_stop(trailers):
+        resp['assetlist'] = json.loads(resp['text'])['list']
+        stop()
 
-        return body, done
-
-    c = SpdyClient()
+    # FIXME: The spdy server is currently taking uri's differently than
+    # the http server is. this should be fixed in thor
+    t0 = time.time()
+    spdyclient = SpdyClient()
+    get = spdyclient.exchange()
+    get.on('response_start', site_start)
+    get.on('response_body', site_body)
+    get.on('response_done', site_stop)
     uri = spdy1 + '/site/' + str(site)
-    req_body_write, req_done = c.req_start('GET', uri, [], get, dummy)
-    req_done(None)
-    push_tcp.run()
-    #for asset in resp['assetlist']:
-    #    spdy_assetget(c, spdy1, spdy2, asset)
+    stream = get.request_start('GET', uri, [])
+    get._streams[stream].request_done(stream, [])
+    run()
+    for asset in resp['assetlist']:
+        spdy_assetget(spdy1, spdy2, asset)
+    return time.time() - t0
 
 
-def spdy_assetget(spdyclient, spdy1, spdy2, asset):
+def spdy_assetget(spdy1, spdy2, asset):
     resp = {'text': ''}
 
-    def get(version, status, phrase, headers, res_pause):
+    def asset_start(status, phrase, headers):
+        if status != '200':
+            print 'Connection Failed: ' + asset
+            print status
+            print phrase
 
-        def body(chunk):
-            resp['text'] += chunk
+    def asset_body(chunk):
+        resp['text'] += chunk
 
-        def done(err):
-            if err:
-                print 'Connection Failed: ' + asset
-            push_tcp.stop()
+    def asset_stop(trailers):
+        stop()
 
-        return body, done
-
+    spdyclient = SpdyClient()
+    get = spdyclient.exchange()
+    get.on('response_start', asset_start)
+    get.on('response_body', asset_body)
+    get.on('response_done', asset_stop)
     parts = asset.split('/')
     if parts[0] == 'host1':
         uri = spdy1 + '/asset/' + parts[1]
     else:
         uri = spdy2 + '/asset/' + parts[1]
-    req_body_write, req_done = spdyclient.req_start('GET', uri, [], get, dummy)
-    req_done(None)
-    push_tcp.run()
+    stream = get.request_start('GET', uri, [])
+    get._streams[stream].request_done(stream, [])
+    run()
 
 
 def main():
@@ -196,11 +204,13 @@ def main():
 
     times = {}
     sites = hello(mainhost_http)
+    httpclient = HttpClient()
     for i,site in enumerate(sites):
         print i
         http_delta = http_siteget(mainhost_http,
                 secondhost_http,
-                site)
+                site,
+                httpclient)
         #spdy_siteget(mainhost_spdy,
         #        secondhost_spdy,
         #        site)
@@ -208,9 +218,10 @@ def main():
         times[site]['http'] = http_delta
         #times[site]['spdy'] = spdy_delta
 
-    print 'Testing complete:  Uploading data'
+    print 'Testing complete!'
     result = collect(mainhost_collect, json.dumps(times))
     print result
+    stop()
 
 # FIXME: This might not be reusing connections for SPDY!  Fix that.
 
