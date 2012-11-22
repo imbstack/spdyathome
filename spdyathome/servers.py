@@ -58,8 +58,9 @@ def spdy_main(conf):
     def spdy_handler(x):
         @on(x, 'request_start')
         def go(*args):
-            print 'SPDY: start %s' % (str(args[1]),)
-            base.paths.get(util.make_ident(x.method, x.uri), base.fourohfour)(x)
+            path = urilib.URI(x.uri).path  # Take into account SPDY's uri
+            print 'SPDY: start %s' % (path,)
+            base.paths.get(util.make_ident(x.method, path), base.fourohfour)(x)
 
         @on(x, 'request_body')
         def body(chunk):

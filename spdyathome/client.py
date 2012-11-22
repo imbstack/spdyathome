@@ -73,7 +73,7 @@ def collect(host, data):
     return "Upload Complete"
 
 
-def http_siteget(http1, http2, site, httpclient):
+def http_siteget(http1, http2, site):
     resp = {'text': '', 'assetlist': []}
 
     def site_start(status, phrase, headers):
@@ -88,6 +88,7 @@ def http_siteget(http1, http2, site, httpclient):
         stop()
 
     t0 = time.time()
+    httpclient = HttpClient()
     get = httpclient.exchange()
     get.on('response_start', site_start)
     get.on('response_body', site_body)
@@ -145,24 +146,22 @@ def spdy_siteget(spdy1, spdy2, site):
         resp['assetlist'] = json.loads(resp['text'])['list']
         stop()
 
-    # FIXME: The spdy server is currently taking uri's differently than
-    # the http server is. this should be fixed in thor
     t0 = time.time()
     spdyclient = SpdyClient()
     get = spdyclient.exchange()
-    get.on('response_start', site_start)
-    get.on('response_body', site_body)
-    get.on('response_done', site_stop)
     uri = spdy1 + '/site/' + str(site)
     stream = get.request_start('GET', uri, [])
+    get._streams[stream].on('response_start', site_start)
+    get._streams[stream].on('response_body', site_body)
+    get._streams[stream].on('response_done', site_stop)
     get._streams[stream].request_done(stream, [])
     run()
     for asset in resp['assetlist']:
-        spdy_assetget(spdy1, spdy2, asset)
+        spdy_assetget(spdy1, spdy2, asset, spdyclient)
     return time.time() - t0
 
 
-def spdy_assetget(spdy1, spdy2, asset):
+def spdy_assetget(spdy1, spdy2, asset, spdyclient):
     resp = {'text': ''}
 
     def asset_start(status, phrase, headers):
@@ -177,17 +176,16 @@ def spdy_assetget(spdy1, spdy2, asset):
     def asset_stop(trailers):
         stop()
 
-    spdyclient = SpdyClient()
     get = spdyclient.exchange()
-    get.on('response_start', asset_start)
-    get.on('response_body', asset_body)
-    get.on('response_done', asset_stop)
     parts = asset.split('/')
     if parts[0] == 'host1':
         uri = spdy1 + '/asset/' + parts[1]
     else:
         uri = spdy2 + '/asset/' + parts[1]
-    stream = get.request_start('GET', uri, [])
+    stream = get.request_start('GET', uri, [('x-test', 'wat')])
+    get._streams[stream].on('response_start', asset_start)
+    get._streams[stream].on('response_body', asset_body)
+    get._streams[stream].on('response_done', asset_stop)
     get._streams[stream].request_done(stream, [])
     run()
 
@@ -204,19 +202,17 @@ def main():
 
     times = {}
     sites = hello(mainhost_http)
-    httpclient = HttpClient()
     for i,site in enumerate(sites):
         print i
         http_delta = http_siteget(mainhost_http,
                 secondhost_http,
-                site,
-                httpclient)
-        #spdy_siteget(mainhost_spdy,
-        #        secondhost_spdy,
-        #        site)
+                site)
+        spdy_siteget(mainhost_spdy,
+                secondhost_spdy,
+                site)
         times[site] = {}
         times[site]['http'] = http_delta
-        #times[site]['spdy'] = spdy_delta
+        times[site]['spdy'] = spdy_delta
 
     print 'Testing complete!'
     result = collect(mainhost_collect, json.dumps(times))
