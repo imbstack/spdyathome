@@ -48,7 +48,6 @@ def hello(host):
 def collect(host, data):
 
     def collect_start(status, phrase, headers):
-        print status, phrase, headers
         if status != '200':
             print 'Uploading data...'
 
@@ -167,8 +166,6 @@ def spdy_assetget(spdy1, spdy2, asset, spdyclient):
     def asset_start(status, phrase, headers):
         if status != '200':
             print 'Connection Failed: ' + asset
-            print status
-            print phrase
 
     def asset_body(chunk):
         resp['text'] += chunk
@@ -179,10 +176,10 @@ def spdy_assetget(spdy1, spdy2, asset, spdyclient):
     get = spdyclient.exchange()
     parts = asset.split('/')
     if parts[0] == 'host1':
-        uri = spdy1 + '/asset/' + parts[1]
+        uri = str(spdy1 + '/asset/' + parts[1])
     else:
-        uri = spdy2 + '/asset/' + parts[1]
-    stream = get.request_start('GET', uri, [('x-test', 'wat')])
+        uri = str(spdy2 + '/asset/' + parts[1])
+    stream = get.request_start('GET', uri, [])
     get._streams[stream].on('response_start', asset_start)
     get._streams[stream].on('response_body', asset_body)
     get._streams[stream].on('response_done', asset_stop)
@@ -207,7 +204,7 @@ def main():
         http_delta = http_siteget(mainhost_http,
                 secondhost_http,
                 site)
-        spdy_siteget(mainhost_spdy,
+        spdy_delta = spdy_siteget(mainhost_spdy,
                 secondhost_spdy,
                 site)
         times[site] = {}
