@@ -1,4 +1,3 @@
 pyyaml >= 3.09
-# urilib==0.1  # Pip is not installing this at the moment, just include it
+urilib==0.1
 -e git://github.com/bis12/thor.git@spdy#egg=thor
--e git://github.com/bis12/nbhttp.git@spdy#egg=nbhttp
