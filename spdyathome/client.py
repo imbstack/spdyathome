@@ -19,7 +19,6 @@ def get_args():
 
 
 def hello(host):
-    # TODO: Add id from server to all headers!
     resp = {'text': '', 'sitelist': []}
 
     def hello_start(status, phrase, headers):
@@ -33,11 +32,18 @@ def hello(host):
         resp['sitelist'] = json.loads(resp['text'])
         stop()
 
+    def hello_err(err):
+        print 'Connection could not be completed...'
+        stop()
+        exit()
+
     httpclient = HttpClient()
+    httpclient.connect_timeout = 5
     hello = httpclient.exchange()
     hello.on('response_start', hello_start)
     hello.on('response_body', hello_body)
     hello.on('response_done', hello_stop)
+    hello.on('error', hello_err)
     uri = host + '/hello'
     hello.request_start('GET', uri, [])
     hello.request_done([])
@@ -64,8 +70,7 @@ def collect(host, data):
     collect.on('response_start', collect_start)
     collect.on('response_body', collect_body)
     collect.on('response_done', collect_stop)
-    # TODO: Make this a POST
-    collect.request_start('GET', host, [])
+    collect.request_start('POST', host, [])
     collect.request_body(data)
     collect.request_done([])
     run()

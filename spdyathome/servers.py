@@ -94,11 +94,11 @@ def capture_main(conf):
         def done(trailers):
             with open(os.path.join(conf['outdir'], conf['outfile']), 'a') as f:
                 f.write(up['inp'])
+                f.write('\n')
                 f.close()
             print 'finished capture'
             x.response_start(200, 'OK', [])
             x.response_done([])
-            # TODO: Remove out/ from git!
 
     capture_serve = HttpServer(host='', port=conf['capture_port'])
     capture_serve.on('exchange', capture_handler)
