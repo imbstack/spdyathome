@@ -20,6 +20,7 @@ setup(
   install_requires = [
     'pyyaml >= 3.09',
     'thor',
+    'argparse==1.2.1',
     'progress==1.0.2'
   ],
   dependency_links = ['git://github.com/bis12/thor.git@spdy#egg=thor'],
