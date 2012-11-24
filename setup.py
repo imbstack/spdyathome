@@ -27,7 +27,7 @@ setup(
   ],
   dependency_links = ['git://github.com/bis12/thor.git@spdy#egg=thor'],
   classifiers = [
-    'Development Status :: 3 - Beta',
+    'Development Status :: 4 - Beta',
     'License :: OSI Approved :: MIT License',
     'Programming Language :: Python :: 2.7',
   ]
