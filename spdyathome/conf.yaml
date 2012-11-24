@@ -9,9 +9,9 @@ http_port: 38091
 capture_port: 38092
 
 # Host for assets from primary site
-mainhost: http://localhost
+mainhost: http://spdyathome1.bis12.com
 # Host for assets from secondard site
-secondhost: http://localhost
+secondhost: http://spdyathome2.bis12.com
 
 # File containing asset information for each site
 sitedump: data/sitedump.json
