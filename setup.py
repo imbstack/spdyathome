@@ -19,7 +19,6 @@ setup(
   long_description = open("README.md").read(),
   install_requires = [
     'pyyaml >= 3.09',
-    'urilib==0.1',
     'thor',
     'progress==1.0.2'
   ],
