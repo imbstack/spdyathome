@@ -4,7 +4,6 @@ General purpose helpers and decorators
 import random
 import os
 import string
-from nbhttp.http_common import dummy
 
 
 def register_all(cls):
