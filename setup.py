@@ -15,9 +15,18 @@ setup(
     'http://github.com/bis12/spdyathome/tarball/spdyathome-%s' % version,
   packages = find_packages('spdyathome'),
   provides = ['spdyathome'],
-  long_description=open("README.md").read(),
-  install_requires=['pyyaml >= 3.09', 'urilib==0.1'],
+  scripts = ['scripts/spdyathome'],
+  long_description = open("README.md").read(),
+  install_requires = [
+    'pyyaml >= 3.09',
+    'urilib==0.1',
+    'thor',
+    'progress==1.0.2'
+  ],
+  dependency_links = ['git://github.com/bis12/thor.git@spdy#egg=thor'],
   classifiers = [
     'Development Status :: 3 - Beta',
+    'License :: OSI Approved :: MIT License',
+    'Programming Language :: Python :: 2.7',
   ]
 )

@@ -2,3 +2,6 @@ build/
 dist/
 out/
 *.pyc
+spdyathome.egg-info/
+src/
+

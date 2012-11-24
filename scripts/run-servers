@@ -1,3 +1,3 @@
 #!/usr/bin/env bash
 
-python -m spdyathome.servers -c ./conf.yaml
+python -m spdyathome.servers

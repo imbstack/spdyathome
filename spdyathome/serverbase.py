@@ -13,7 +13,7 @@ class BaseServer(object):
         util.register_all(self)
         self.sitelist = util.load_list(conf['sitelist'])
         self.sites = {}
-        for i,line in enumerate(open(conf['sitedump'], 'r')):
+        for i,line in enumerate(open(util.rel_path(conf['sitedump']), 'r')):
             if str(i) in self.sitelist:
                 self.sites[str(i)] = json.loads(line)
 

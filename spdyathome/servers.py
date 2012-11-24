@@ -20,7 +20,7 @@ def get_args():
     parser = argparse.ArgumentParser(
             description='Run SPDY and HTTP servers to act as endpoint of test.',
             epilog='This can be run directly or using `scripts/run-servers`.')
-    parser.add_argument('-c', '-config', type=str, required=True,
+    parser.add_argument('-c', '-config', type=str, required=False,
             dest='conf_file', action='store', help='YAML configuration file.')
     return parser.parse_args()
 
@@ -105,7 +105,9 @@ def capture_main(conf):
 
 if __name__ == '__main__':
     args = get_args()
-    conf = yaml.load(file(args.conf_file, 'r'))
+    #conf = yaml.load(file(args.conf_file, 'r'))
+    dirpath = os.path.dirname(__file__)
+    conf = yaml.load(file(os.path.join(dirpath, 'conf.yaml'), 'r'))
 
     try:
         os.mkdir(conf['outdir'])

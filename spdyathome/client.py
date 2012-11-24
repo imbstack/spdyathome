@@ -2,9 +2,11 @@
 Client to run the tests
 """
 import json
+import os
 import time
 import yaml
 import argparse
+from progress.bar import Bar
 from thor import HttpClient
 from thor import SpdyClient
 from thor.loop import stop, run
@@ -13,7 +15,7 @@ from thor.loop import stop, run
 def get_args():
     parser = argparse.ArgumentParser(
             description='Run HTTP and SPDY clients for test.')
-    parser.add_argument('-c', '-config', type=str, required=True,
+    parser.add_argument('-c', '-config', type=str, required=False,
             dest='conf_file', action='store', help='YAML configuration file.')
     return parser.parse_args()
 
@@ -194,7 +196,9 @@ def spdy_assetget(spdy1, spdy2, asset, spdyclient):
 
 def main():
     args = get_args()
-    conf = yaml.load(file(args.conf_file, 'r'))
+    #conf = yaml.load(file(args.conf_file, 'r'))
+    dirpath = os.path.dirname(__file__)
+    conf = yaml.load(file(os.path.join(dirpath, 'conf.yaml'), 'r'))
 
     mainhost_http = conf['mainhost'] + ':' + str(conf['http_port'])
     mainhost_spdy = conf['mainhost'] + ':' + str(conf['spdy_port'])
@@ -204,8 +208,10 @@ def main():
 
     times = {}
     sites = hello(mainhost_http)
+    bar = Bar('Running Test', max=len(sites))
     for i,site in enumerate(sites):
-        print i
+        bar.next()
+        # TODO: MAKE THIS PRINT HELPFUL STUFF AND JUST DO IT ON ONE LINE!
         http_delta = http_siteget(mainhost_http,
                 secondhost_http,
                 site)
@@ -216,12 +222,11 @@ def main():
         times[site]['http'] = http_delta
         times[site]['spdy'] = spdy_delta
 
+    bar.finish()
     print 'Testing complete!'
     result = collect(mainhost_collect, json.dumps(times))
     print result
     stop()
-
-# FIXME: This might not be reusing connections for SPDY!  Fix that.
 
 
 if __name__ == '__main__':

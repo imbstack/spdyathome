@@ -2,6 +2,7 @@
 General purpose helpers and decorators
 """
 import random
+import os
 import string
 from nbhttp.http_common import dummy
 
@@ -20,6 +21,9 @@ def register(method, path, *args):
         return func
     return wrapper
 
+def rel_path(f):
+    dirpath = os.path.dirname(__file__)
+    return os.path.join(dirpath, f)
 
 def make_ident(method, route):
     """
@@ -45,7 +49,7 @@ def fill_junk(size):
 
 def load_list(f):
     ls = []
-    for line in open(f, 'r'):
+    for line in open(rel_path(f), 'r'):
         ls.append(line.split()[0])
     return ls
 
