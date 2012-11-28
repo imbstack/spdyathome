@@ -1,0 +1,16 @@
+Randomize http/spdy ordering
+Random 10 sites at end
+Add flag to client to do full list
+Send IP with upload
+Ask Callahan to run it
+Add timestamp to blob
+Add host identifier
+Add per site timestamp
+If randomized, add indicator for which protocol ran first
+Also randomize order 15 sites get downloaded in (and add indicator to see which is first)
+
+
+1. Run it from ICSI
+2. Run it from home again
+3. Run it from Pittsburgh(CMU)
+4. Run it from Yelp people

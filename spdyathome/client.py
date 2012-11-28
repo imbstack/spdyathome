@@ -2,10 +2,9 @@
 Client to run the tests
 """
 import json
-import os
 import time
-import yaml
 import argparse
+import conf
 from progress.bar import Bar
 from thor import HttpClient
 from thor import SpdyClient
@@ -15,8 +14,6 @@ from thor.loop import stop, run
 def get_args():
     parser = argparse.ArgumentParser(
             description='Run HTTP and SPDY clients for test.')
-    parser.add_argument('-c', '-config', type=str, required=False,
-            dest='conf_file', action='store', help='YAML configuration file.')
     return parser.parse_args()
 
 
@@ -196,15 +193,12 @@ def spdy_assetget(spdy1, spdy2, asset, spdyclient):
 
 def main():
     args = get_args()
-    #conf = yaml.load(file(args.conf_file, 'r'))
-    dirpath = os.path.dirname(__file__)
-    conf = yaml.load(file(os.path.join(dirpath, 'conf.yaml'), 'r'))
 
-    mainhost_http = conf['mainhost'] + ':' + str(conf['http_port'])
-    mainhost_spdy = conf['mainhost'] + ':' + str(conf['spdy_port'])
-    secondhost_http = conf['secondhost'] + ':' + str(conf['http_port'])
-    secondhost_spdy = conf['secondhost'] + ':' + str(conf['spdy_port'])
-    mainhost_collect = conf['mainhost'] + ':' + str(conf['capture_port'])
+    mainhost_http = conf.mainhost + ':' + str(conf.http_port)
+    mainhost_spdy = conf.mainhost + ':' + str(conf.spdy_port)
+    secondhost_http = conf.secondhost + ':' + str(conf.http_port)
+    secondhost_spdy = conf.secondhost + ':' + str(conf.spdy_port)
+    mainhost_collect = conf.mainhost + ':' + str(conf.capture_port)
 
     times = {}
     sites = hello(mainhost_http)
