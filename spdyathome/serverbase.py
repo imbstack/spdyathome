@@ -4,6 +4,7 @@ Base class for common operations of servers.
 import util
 import copy
 import json
+from . import conf
 
 
 class BaseServer(object):

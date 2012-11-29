@@ -6,6 +6,7 @@ import urilib
 import util
 import os
 import argparse
+from . import conf
 from thor.loop import run
 from thor import HttpServer
 from thor import SpdyServer
