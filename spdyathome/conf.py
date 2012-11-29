@@ -16,7 +16,7 @@ secondhost = 'http://spdyathome2.bis12.com'
 # File containing asset information for each site
 sitedump = 'data/sitedump.json'
 # File containing the list of sites to access during each test
-sitelist = 'data/sitelist_test.txt'
+sitelist = 'data/sitelist.txt'
 
 # Directory to write output to
 outdir = 'out/'
