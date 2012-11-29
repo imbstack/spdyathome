@@ -1,5 +1,5 @@
 """
-Client to run the tests
+Client to run the tests.  Uses thor for both SPDY and HTTP clients
 """
 import json
 import time
@@ -7,7 +7,7 @@ import argparse
 import conf
 import random
 import datetime
-from progress.bar import Bar
+import sys
 from thor import HttpClient
 from thor import SpdyClient
 from thor.loop import stop, run
@@ -60,10 +60,8 @@ def collect(host, data):
 
     def collect_body(chunk):
         pass
-        #print chunk
 
     def collect_stop(trailers):
-        #print 'Finished!'
         stop()
 
     httpclient = HttpClient()
@@ -89,7 +87,11 @@ def http_siteget(http1, http2, site):
         resp['text'] += chunk
 
     def site_stop(trailers):
-        resp['assetlist'] = json.loads(resp['text'])['list']
+        print 'HTTP:',
+        assetlist = json.loads(resp['text'])['list']
+        for asset in assetlist:
+            http_assetget(http1, http2, asset, httpclient)
+        print
         stop()
 
     t0 = time.time()
@@ -102,13 +104,12 @@ def http_siteget(http1, http2, site):
     get.request_start('GET', uri, [])
     get.request_done([])
     run()
-    for asset in resp['assetlist']:
-        # TODO: consider doing this with 4-6 connections?
-        http_assetget(http1, http2, asset, httpclient)
     return time.time() - t0
 
 
 def http_assetget(http1, http2, asset, httpclient):
+    sys.stdout.write('.')
+    sys.stdout.flush()
     resp = {'text': ''}
 
     def asset_start(status, phrase, headers):
@@ -121,7 +122,7 @@ def http_assetget(http1, http2, asset, httpclient):
         resp['text'] += chunk
 
     def asset_stop(trailers):
-        stop()
+        pass
 
     get = httpclient.exchange()
     get.on('response_start', asset_start)
@@ -134,7 +135,6 @@ def http_assetget(http1, http2, asset, httpclient):
         uri = http2 + '/asset/' + parts[1]
     get.request_start('GET', uri, [])
     get.request_done([])
-    run()
 
 
 def spdy_siteget(spdy1, spdy2, site):
@@ -148,7 +148,11 @@ def spdy_siteget(spdy1, spdy2, site):
         resp['text'] += chunk
 
     def site_stop(trailers):
-        resp['assetlist'] = json.loads(resp['text'])['list']
+        assetlist = json.loads(resp['text'])['list']
+        print 'SPDY:',
+        for asset in assetlist:
+            spdy_assetget(spdy1, spdy2, asset, spdyclient)
+        print
         stop()
 
     t0 = time.time()
@@ -161,12 +165,12 @@ def spdy_siteget(spdy1, spdy2, site):
     get._streams[stream].on('response_done', site_stop)
     get._streams[stream].request_done(stream, [])
     run()
-    for asset in resp['assetlist']:
-        spdy_assetget(spdy1, spdy2, asset, spdyclient)
     return time.time() - t0
 
 
 def spdy_assetget(spdy1, spdy2, asset, spdyclient):
+    sys.stdout.write('.')
+    sys.stdout.flush()
     resp = {'text': ''}
 
     def asset_start(status, phrase, headers):
@@ -177,7 +181,7 @@ def spdy_assetget(spdy1, spdy2, asset, spdyclient):
         resp['text'] += chunk
 
     def asset_stop(trailers):
-        stop()
+        pass
 
     get = spdyclient.exchange()
     parts = asset.split('/')
@@ -190,7 +194,6 @@ def spdy_assetget(spdy1, spdy2, asset, spdyclient):
     get._streams[stream].on('response_body', asset_body)
     get._streams[stream].on('response_done', asset_stop)
     get._streams[stream].request_done(stream, [])
-    run()
 
 
 def main():
