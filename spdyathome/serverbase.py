@@ -1,10 +1,10 @@
 """
 Base class for common operations of servers.
 """
-import util
 import copy
 import json
 from . import conf
+from . import util
 
 
 class BaseServer(object):
@@ -14,9 +14,10 @@ class BaseServer(object):
         util.register_all(self)
         self.sitelist = util.load_list(conf.sitelist)
         self.sites = {}
-        for i,line in enumerate(open(util.rel_path(conf.sitedump), 'r')):
-            if str(i) in self.sitelist:
-                self.sites[str(i)] = json.loads(line)
+        for line in open(util.rel_path(conf.sitedump), 'r'):
+            j = json.loads(line)
+            if str(j['id']) in self.sitelist:
+                self.sites[str(j['id'])] = j
 
     # HTTP verbs and paths below
 

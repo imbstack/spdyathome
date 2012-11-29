@@ -3,10 +3,10 @@ Start the basic thor servers for each case of connection.
 Use the standard request responders in BaseServer.
 """
 import urilib
-import util
 import os
 import argparse
 from . import conf
+from . import util
 from thor.loop import run
 from thor import HttpServer
 from thor import SpdyServer

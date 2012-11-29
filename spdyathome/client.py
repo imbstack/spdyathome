@@ -4,10 +4,10 @@ Client to run the tests.  Uses thor for both SPDY and HTTP clients
 import json
 import time
 import argparse
-import conf
 import random
 import datetime
 import sys
+from . import conf
 from thor import HttpClient
 from thor import SpdyClient
 from thor.loop import stop, run
