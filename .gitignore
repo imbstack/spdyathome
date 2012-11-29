@@ -4,4 +4,12 @@ out/
 *.pyc
 spdyathome.egg-info/
 src/
+*.aux
+*.log
+*.bbl
+*.blg
+*.out
+*.pdf
+*.dvi
+*.toc
 
