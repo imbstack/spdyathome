@@ -5,6 +5,8 @@ import json
 import time
 import argparse
 import conf
+import random
+import datetime
 from progress.bar import Bar
 from thor import HttpClient
 from thor import SpdyClient
@@ -202,21 +204,34 @@ def main():
 
     times = {}
     sites = hello(mainhost_http)
-    bar = Bar('Running Test', max=len(sites))
+    random.shuffle(sites)
     for i,site in enumerate(sites):
-        bar.next()
-        # TODO: MAKE THIS PRINT HELPFUL STUFF AND JUST DO IT ON ONE LINE!
-        http_delta = http_siteget(mainhost_http,
-                secondhost_http,
-                site)
-        spdy_delta = spdy_siteget(mainhost_spdy,
-                secondhost_spdy,
-                site)
-        times[site] = {}
+        # Randomize ordering of HTTP and SPDY transactions
+        print 'Working on site:', i, '[%s] '%(str(datetime.datetime.now()),)
+        http_delta = {}
+        spdy_delta = {}
+        if random.random() > 0.5:
+            http_delta['order'] = 0
+            spdy_delta['order'] = 1
+            http_delta['time'] = http_siteget(mainhost_http,
+                    secondhost_http,
+                    site)
+            spdy_delta['time'] = spdy_siteget(mainhost_spdy,
+                    secondhost_spdy,
+                    site)
+        else:
+            http_delta['order'] = 1
+            spdy_delta['order'] = 0
+            spdy_delta['time'] = spdy_siteget(mainhost_spdy,
+                    secondhost_spdy,
+                    site)
+            http_delta['time'] = http_siteget(mainhost_http,
+                    secondhost_http,
+                    site)
+        times[site] = {'order': i, 'timestamp': str(datetime.datetime.now())}
         times[site]['http'] = http_delta
         times[site]['spdy'] = spdy_delta
 
-    bar.finish()
     print 'Testing complete!'
     result = collect(mainhost_collect, json.dumps(times))
     print result
