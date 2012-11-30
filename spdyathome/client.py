@@ -7,6 +7,7 @@ import argparse
 import random
 import datetime
 import sys
+import socket
 from . import conf
 from thor import HttpClient
 from thor import SpdyClient
@@ -20,7 +21,7 @@ def get_args():
 
 
 def hello(host):
-    resp = {'text': '', 'sitelist': []}
+    resp = {'text': '', 'sitelist': [], 'ip': ''}
 
     def hello_start(status, phrase, headers):
         if status == '200':
@@ -30,7 +31,9 @@ def hello(host):
         resp['text'] += chunk
 
     def hello_stop(trailers):
-        resp['sitelist'] = json.loads(resp['text'])
+        dct = json.loads(resp['text'])
+        resp['sitelist'] = dct['sitelist']
+        resp['ip'] = dct['ip']
         stop()
 
     def hello_err(err):
@@ -49,7 +52,7 @@ def hello(host):
     hello.request_start('GET', uri, [])
     hello.request_done([])
     run()
-    return resp['sitelist']
+    return resp
 
 
 def collect(host, data):
@@ -87,7 +90,6 @@ def http_siteget(http1, http2, site):
         resp['text'] += chunk
 
     def site_stop(trailers):
-        print 'HTTP:',
         assetlist = json.loads(resp['text'])['list']
         for asset in assetlist:
             http_assetget(http1, http2, asset, httpclient)
@@ -95,6 +97,7 @@ def http_siteget(http1, http2, site):
         stop()
 
     t0 = time.time()
+    print 'HTTP:',
     httpclient = HttpClient()
     get = httpclient.exchange()
     get.on('response_start', site_start)
@@ -149,13 +152,13 @@ def spdy_siteget(spdy1, spdy2, site):
 
     def site_stop(trailers):
         assetlist = json.loads(resp['text'])['list']
-        print 'SPDY:',
         for asset in assetlist:
             spdy_assetget(spdy1, spdy2, asset, spdyclient)
         print
         stop()
 
     t0 = time.time()
+    print 'SPDY:',
     spdyclient = SpdyClient()
     get = spdyclient.exchange()
     uri = spdy1 + '/site/' + str(site)
@@ -205,35 +208,54 @@ def main():
     secondhost_spdy = conf.secondhost + ':' + str(conf.spdy_port)
     mainhost_collect = conf.mainhost + ':' + str(conf.capture_port)
 
-    times = {}
-    sites = hello(mainhost_http)
+    hello_resp = hello(mainhost_http)
+    sites = hello_resp['sitelist']
+    times = {'ip': hello_resp['ip'], 'uniq': hash(socket.gethostname())}
     random.shuffle(sites)
     for i,site in enumerate(sites):
         # Randomize ordering of HTTP and SPDY transactions
-        print 'Working on site:', i, '[%s] '%(str(datetime.datetime.now()),)
+        print 'DEBUG', site
+        print 'Working on site %d/%d [%s] '%(i, len(sites), str(datetime.datetime.now()))
         http_delta = {}
         spdy_delta = {}
         if random.random() > 0.5:
             http_delta['order'] = 0
             spdy_delta['order'] = 1
-            http_delta['time'] = http_siteget(mainhost_http,
-                    secondhost_http,
-                    site)
-            spdy_delta['time'] = spdy_siteget(mainhost_spdy,
-                    secondhost_spdy,
-                    site)
+            try:
+                http_delta['time'] = http_siteget(mainhost_http,
+                        secondhost_http,
+                        site)
+            except:
+                stop()
+                http_delta['time'] = -1
+            try:
+                spdy_delta['time'] = spdy_siteget(mainhost_spdy,
+                        secondhost_spdy,
+                        site)
+            except:
+                stop()
+                spdy_delta['time'] = -1
         else:
             http_delta['order'] = 1
             spdy_delta['order'] = 0
-            spdy_delta['time'] = spdy_siteget(mainhost_spdy,
-                    secondhost_spdy,
-                    site)
-            http_delta['time'] = http_siteget(mainhost_http,
-                    secondhost_http,
-                    site)
+            try:
+                spdy_delta['time'] = spdy_siteget(mainhost_spdy,
+                        secondhost_spdy,
+                        site)
+            except:
+                stop()
+                spdy_delta['time'] = -1
+            try:
+                http_delta['time'] = http_siteget(mainhost_http,
+                        secondhost_http,
+                        site)
+            except:
+                stop()
+                http_delta['time'] = -1
         times[site] = {'order': i, 'timestamp': str(datetime.datetime.now())}
         times[site]['http'] = http_delta
         times[site]['spdy'] = spdy_delta
+        time.sleep(1)
 
     print 'Testing complete!'
     result = collect(mainhost_collect, json.dumps(times))

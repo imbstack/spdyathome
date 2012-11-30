@@ -34,7 +34,8 @@ class BaseServer(object):
     def gethello(self, res):
         headers = []
         res.response_start(200, 'OK', headers)
-        res.response_body(json.dumps(self.sitelist))
+        ip = res.http_conn.tcp_conn.socket.getpeername()[0]
+        res.response_body(json.dumps({'sitelist': self.sitelist, 'ip': ip}))
         res.response_done([])
 
     """
