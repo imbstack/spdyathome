@@ -65,7 +65,6 @@
 17635 https://www.odnoklassniki.ru
 17729 https://www.tu-chemnitz.de
 17787 http://www.statigr.am
-18136 http://www.163.com
 19529 http://www.avg.com
 19628 https://www.wordpress.com
 19897 http://www.directlyrics.com
@@ -226,7 +225,6 @@
 84295 https://www.hbr.org
 84318 http://www.khl.ru
 84503 http://www.flipora.com
-85219 http://www.clarin.com
 85250 http://www.babytree.com
 85256 http://www.pcauto.com.cn
 85288 http://www.1uuc.com

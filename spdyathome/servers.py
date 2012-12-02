@@ -4,6 +4,7 @@ Use the standard request responders in BaseServer.
 """
 import urilib
 import os
+import sys
 import argparse
 from . import conf
 from . import util
@@ -102,6 +103,7 @@ def capture_main(conf):
 
 if __name__ == '__main__':
     args = get_args()
+    sys.setrecursionlimit(2000)  # I'm so sorry...
 
     try:
         os.mkdir(conf.outdir)
