@@ -1,3 +1,8 @@
 #!/usr/bin/env bash
 
-python -m spdyathome.servers
+RC=1
+while [ $RC -ne 0 ]; do
+    python -m spdyathome.servers
+    RC=$?
+    echo $RC
+done
