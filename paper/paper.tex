@@ -48,10 +48,10 @@ help decide whether or not this is a good direction for the HTTP specification
 to go.
 \end{abstract}
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Background}
-\label{sec:intro}
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\label{sec:background}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 HTTP is one of the most widely used application-level protocols. Initially
 written in 1996~\cite{http1rfc}, HTTP was written for a different era of web
 sites -- before streaming video websites, before asset-heavy web pages, and
@@ -85,13 +85,13 @@ The current self-imposed deadline for HTTP/2.0 is July
 the specification have been proposed: Google's SPDY, Microsoft's Speed +
 Mobility, and a "Network-Friendly" proposal from a handful of Open Source
 authors. The three will be briefly outlined beginning in
-\S\ref{sec:intro/spdy} and then the remainder of the paper will focus on
+\S\ref{sec:background/spdy} and then the remainder of the paper will focus on
 measurements of the most viable candidate for HTTP/2.0, SPDY.
 
 % TODO: Expand on these for the full paper!
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection{SPDY}
-\label{sec:intro/spdy}
+\label{sec:background/spdy}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 The most interesting and likely to succeed proposal, SPDY is rather mature
 at this point in time, having been implemented in both the most recent Chrome
@@ -138,7 +138,7 @@ bandwidth is saved~\cite{binoy}.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection{Speed+Mobility}
-\label{sec:intro/s+m}
+\label{sec:background/s+m}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 This proposal~\cite{sm} comes from Microsoft.  It shares much in common with
 SPDY, but with a few major differences. First is that rather than defining
@@ -150,7 +150,7 @@ the reasons that Facebook endorsed SPDY~\cite{fbook}.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection{Network-Friendly}
-\label{sec:intro/opensource}
+\label{sec:background/opensource}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 This proposal comes from a group of open-source developers without any strict
 ties to a company or organization otherwise.  It is quite different from the
@@ -177,16 +177,10 @@ is important to note that currently SPDY requires SSL/TLS to upgrade the
 connection and it is likely that in the future SSL/TLS will be explicitly
 required.
 
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{Experiments}
-\label{sec:project}
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\subsection{Problem Statement}
-\label{sec:project/problem}
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Research Areas}
+\label{sec:research}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 The web has developed to the point where HTTP/1.1 is no longer sufficient to
 architect our major web applications. The basic semantic meaning is excellent,
 and is the foundation of the web, but certain engineering considerations must
@@ -196,31 +190,30 @@ will be an improvement for the vast majority of the web.  Does the rather
 drastic increase in complexity pay off in the general case, and is it worth the
 added cost in terms of development time to support this protocol everywhere?
 
-This project sets out to answer that question in two fashions.  First with an
-in-depth examination of what is the limiting factor of current HTTP/1.1
-including a review of literature in the area and a characterization of
-real-world web page asset size distribution (and how we predict the same assets
-will load if loaded over SPDY).  Then, we will collect direct measurements with
-a simulated browser experiment to determine empirically how much of an
-improvement is seen when using SPDY rather than HTTP.  The experiment is
-proposed in \S\ref{sec:project}.
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Overview}
+\label{sec:research/overview}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+This project sets out to answer that question in two fashions. First, we will
+perform an in-depth examination of what is the limiting factor of current
+HTTP/1.1 including a review of literature in the area and a characterization of
+real-world web page asset size distribution in \S\ref{sec:assets} (and
+how we predict the same assets will load if loaded over SPDY). Since SPDY can
+combine asset requests into a single multiplexed TCP connection, we identify
+this as a significant source of performance improvement over HTTP. We will
+perform this by collecting the assets from the top Alexa sites with the Web
+Asset Scraper described in \S\ref{sec:research/scraper}.
 
-The experiment uses a client-server architecture to gather data about the
-effectiveness of the SPDY protocol. The server can be run from any standard
-machine, but only a single one will be run for the experiment.  The client (the
-``collector'') is the real measurement platform and will be distributed to
-volunteers to run in order to test SPDY in a number of different network
-conditions.  The client will collect data and report back to the server
-anonymous information about how performant the protocol was in addition to
-helpful details that may help break down what caused variations in results.
+But how will \textit{real} web sites perform when their assets are multiplexed?
+Since only a handful of (already optimized) sites implement SPDY, we must
+collect direct measurements with a simulated browser. The simulated
+client/server will experimentally determine empirically how much of an
+improvement is seen when using SPDY rather than HTTP.  The simulation is
+proposed in \S\ref{sec:research/client-server}.
 
-%%%%%%%%%%%%%%%%%
-%% Tom has read through here ^^^^^^
-%%    12/1/2012
-%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\subsection{Collector}
-\label{sec:project/collector}
+\subsection{Web Asset Scraper}
+\label{sec:research/scraper}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 The server described in \S\ref{sec:project/server} needs to correctly simulate
 real world webpages. In order to facilitate this, websites from the Alexa
@@ -235,9 +228,21 @@ of the proposed project as the work has already been completed in conjunction
 with another student.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\subsection{Server}
-\label{sec:project/server}
+\subsection{Client/Server Implementation}
+\label{sec:research/client-server}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+The simulation uses a client-server architecture to gather data about the
+effectiveness of the SPDY protocol. The server can be run from any standard
+machine, but only a single one will be run for the experiment.  The client (the
+``collector'') is the real measurement platform and will be distributed to
+volunteers to run in order to test SPDY in a number of different network
+conditions.  The client will collect data and report back to the server
+anonymous information about how performant the protocol was in addition to
+helpful details that may help break down what caused variations in results.
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsubsection{Server}
+\label{sec:research/server}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 If each client accessed all of the websites we scraped, the process would take
 an insufferably long time.  Therefore, we have decided on the following
 breakdown
@@ -269,10 +274,10 @@ may compress more readily as compared to an image which doesn't compress very
 much on top of its generally pre-compressed format.
 \end{itemize}
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\subsection{Client}
-\label{sec:project/client}
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsubsection{Client}
+\label{sec:research/client}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 The client should be cross platform and easy to run.  The ultimate goal is for
 it to be as simple as downloading and clicking on an executable of some form.
 The client will access each of the tests specified in the list in turn using
@@ -280,26 +285,43 @@ both SPDY and HTTP/1.1 with SSL/TLS and
 record timing information about how long it takes for each request to complete.
 After this step is complete, the client will gather data about its location and
 other considerations in order to return to the server for analysis.  All data
-returned will be presented to the user to approve \textbf{before} being sent back. 
+returned will be presented to the user to approve \textbf{before} being sent
+back.
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{Evaluation}
-\label{sec:eval}
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-Once this data is collected the time difference will be found between each
-protocol's retrieval of each test page. The obvious next step will be to
-determine if SPDY actually made the pages load faster or not. In all likelihood,
-there will not be a constant speedup across all pages and so the next step of
-evaluation will be to see in which cases an improvement was found. This should
-give insight into how SPDY improves over the prior specification and help decide
-whether or not it is worth it for the actual upgrade of HTTP to take place.
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Asset Characterization}
+\label{sec:assets}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+here is where we will discuss the asset measurement stuff.
 
-This success of this experiment will be based off of how many points of data can
-be acquired and how varying the conditions are for them.  Much of what will be
-included in the final report will be plots and tables of the data collected to
-allow the reader to decide for themselves.  This information will be useful to
-others and the measurement platform itself should be designed in such a way that
-future experiments can be run on it without too much effort to retool it.
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Real World SPDY vs. HTTP}
+\label{sec:realworld}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+here is where we will discuss brian's spdyathome results
+
+
+% I don't want to remove this wholesale but I don't think it is relevant
+% anywhere else in the paper. Maybe it fits somewhere?
+% -Tom
+% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% \section{Evaluation}
+% \label{sec:eval}
+% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Once this data is collected the time difference will be found between each
+% protocol's retrieval of each test page. The obvious next step will be to
+% determine if SPDY actually made the pages load faster or not. In all likelihood,
+% there will not be a constant speedup across all pages and so the next step of
+% evaluation will be to see in which cases an improvement was found. This should
+% give insight into how SPDY improves over the prior specification and help decide
+% whether or not it is worth it for the actual upgrade of HTTP to take place.
+%
+% This success of this experiment will be based off of how many points of data can
+% be acquired and how varying the conditions are for them.  Much of what will be
+% included in the final report will be plots and tables of the data collected to
+% allow the reader to decide for themselves.  This information will be useful to
+% others and the measurement platform itself should be designed in such a way that
+% future experiments can be run on it without too much effort to retool it.
 
 \bibliographystyle{plain}
 \bibliography{rfc,citations}
