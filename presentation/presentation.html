@@ -55,30 +55,45 @@
   <h1>HTTP/2.0 ?</h1>
 </section>
 
-<!--
 <section class="slide">
-</section>
--->
-<section class="slide">
-  <h2>Microsoft S+M</h2>
-</section>
-<section class="slide">
-  <h2>Network Friendly</h2>
-</section>
-<section class="slide">
+  <!--
+  It makes sense to describe SPDY first because it is
+    - most likely to be HTTP/2.0
+    - the basis of ideas used in S+M & Network Friendly
+  -->
   <h2>SPDY</h2>
 
-  <h3>Better multiplexing?</h3>
+  <h3>Better Multiplexing</h3>
   <!--
-    What Tom means by this:
+    What Tom means by "better multixplexing":
     HTTP/1.1 persistent connections are multiplexing requests into the same
     TCP connection, granted. But SPDY does this on a byte-level, so the TCP
     stream will be more effectively used.
   -->
-  <h3>Compress further?</h3>
-  <h3>HTTP Request Priority?</h3>
-  <h3>Security?</h3>
+  <h3>Compress Headers</h3>
+  <h3>HTTP Request Priority</h3>
+  <h3>Security By Default</h3>
+</section>
 
+<section class="slide">
+  <h2>Microsoft S+M</h2>
+  <h3>Based on SPDY...</h3>
+  <ul>
+    <li>Content Streams</li>
+    <li>HTTP Layering</li>
+  </ul>
+  <h3>...but over WebSockets, not SSL</h3>
+  <h3>Optional Compression, Server Push</h3>
+</section>
+
+<section class="slide">
+  <h2>Network Friendly</h2>
+  <h3>HTTP Header Overhaul</h3>
+  <ul>
+    <li>Register headers at beginning &rarr; they are assumed for subsequent requests</li>
+    <li>Binary headers</li>
+  </ul>
+  <h3>Content Streams</h3>
 </section>
 
 <!-- End slides. -->
