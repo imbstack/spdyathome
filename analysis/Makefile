@@ -1,6 +1,6 @@
 infile = ~/Desktop/report.json
 
-plots: plot1.png plot3.png plot9.png plot2.png
+plots: plot1.png plot3.png plot9.png plot2.png plot5.png
 	@echo "Complete"
 
 %.png: %.gpi %.txt
