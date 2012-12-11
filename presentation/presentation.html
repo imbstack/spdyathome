@@ -87,6 +87,34 @@
 </section>
 
 <section class="slide">
+  <h2>SPDY</h2>
+  <h3>Control Frame</h3>
+  <pre>
++----------------------------------+
+|C| Version(15bits) | Type(16bits) |
++----------------------------------+
+| Flags (8)  |  Length (24 bits)   |
++----------------------------------+
+|               Data               |
++----------------------------------+
+  </pre>
+</section>
+
+<section class="slide">
+  <h2>SPDY</h2>
+  <h3>Data Frame</h3>
+  <pre>
++----------------------------------+
+|C|       Stream-ID (31bits)       |
++----------------------------------+
+| Flags (8)  |  Length (24 bits)   |
++----------------------------------+
+|               Data               |
++----------------------------------+
+  </pre>
+</section>
+
+<section class="slide">
   <h2>Microsoft S+M</h2>
   <h3>Based on SPDY...</h3>
   <ul>
@@ -170,11 +198,35 @@
 <section class="slide">
   <h1>Real World Trials</h1>
 </section>
-<!--
 
-  All right, Brian, all you...
+<section class="slide">
+  <h2>Question: Is SPDY faster than HTTP?</h2>
+  <h3>According to Google, yes:</h3>
+    <blockquote>
+      "The results show a speedup over HTTP of 27% - 60% in page load time over
+      plain TCP (without SSL), and 39% - 55% over SSL."
+    </blockquote>
+</section>
+<section class="slide">
+  <h2>Simulation</h2>
+  <h3>1. Create Website Profiles from Scraped Data</h3>
+  <h3>2. Write Web Server(s)</h3>
+  <ul>
+    <li>Use Python's <a href='https://github.com/mnot/thor'>thor</a> for HTTP implementation</li>
+    <li>Create a SPDY implementation for thor</li>
+  </ul>
+  <h3>3. Distribute Client</h3>
+</section>
 
--->
+<section class="slide">
+</section>
+<section class="slide">
+</section>
+
+<section class="slide">
+  <h2>Thanks!</h2>
+  <h3>Questions?</h3>
+</section>
 
 <!-- End slides. -->
 
