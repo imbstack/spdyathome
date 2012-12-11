@@ -13,3 +13,5 @@ src/
 *.dvi
 *.toc
 
+analysis/plot*.txt
+analysis/plot*.png
