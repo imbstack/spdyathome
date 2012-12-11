@@ -31,7 +31,7 @@
 <!-- Begin slides. Just make elements with a class of slide. -->
 
 <section class="slide title">
-  <h1>HTTP/2.0 &mdash; SPDY</h1>
+  <h1>The Quest For HTTP/2.0</h1>
 </section>
 
 <section class="slide">
@@ -53,6 +53,17 @@
 
 <section class="slide">
   <h1>HTTP/2.0 ?</h1>
+</section>
+
+<section class="slide">
+  <h2>HTTP/2.0 Goals</h2>
+  <h3>Retain HTTP Semantics</h3>
+  <h3>Reduce Perceived Latency</h3>
+  <h3>Optimize HTTP Headers</h3>
+  <h3>Stop Breaking TCP</h3>
+  <ul>
+    <li>6 connections * 4 initcwd = 24 packets immediately</li>
+  </ul>
 </section>
 
 <section class="slide">
@@ -84,6 +95,9 @@
   </ul>
   <h3>...but over WebSockets, not SSL</h3>
   <h3>Optional Compression, Server Push</h3>
+  <ul>
+    <li>To save battery on mobile devices</li>
+  </ul>
 </section>
 
 <section class="slide">
