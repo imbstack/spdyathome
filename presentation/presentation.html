@@ -5,7 +5,7 @@
   <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
   <meta name="viewport" content="width=1024, user-scalable=no">
 
-  <title>Your deck.js Presentation</title>
+  <title>HTTP/2.0</title>
 
   <!-- Required stylesheet -->
   <link rel="stylesheet" href="deck.js/core/deck.core.css">
@@ -96,8 +96,73 @@
   <h3>Content Streams</h3>
 </section>
 
-<!-- End slides. -->
+<section class="slide">
+  <h1>SPDY Asset Combination</h1>
+</section>
 
+<section class="slide">
+  <h2>How can assets be combined?</h2>
+  <h3>Single TCP Connection</h3>
+  <ul>
+    <li>Same IP Address</li>
+  </ul>
+  <h3>Over SSL</h3>
+  <ul>
+    <li>Valid SSL Certificate for host</li>
+  </ul>
+</section>
+
+<section class="slide">
+  <h2><s>Measurement</s> Scraping</h2>
+  <h3>1. Use <a href="http://phantomjs.org/">PhantomJS</a> to determine
+    assets on a page</h3>
+  <h3>2. Custom script which downloads every asset and records:</h3>
+  <ul>
+    <li>Filesize</li>
+    <li>SSL Certificate</li>
+    <li>Remote IP</li>
+  </ul>
+</section>
+
+<section class="slide">
+  <h2>An Assumption:</h2>
+  <h3>Rearrangement of asset delivery</h3>
+  <ul>
+    <li>Sites currently use things like:
+      <ul>
+        <li>Asset Host Sharding</li>
+        <li>CDNs</li>
+      </ul>
+    </li>
+    <li>We assume site owners would combine assets into SPDY streams</li>
+  </ul>
+</section>
+
+<section class="slide">
+  <h2>Multiplexing Ratio</h2>
+  <img src='images/plot_multiplexing.png' />
+</section>
+
+<section class="slide">
+  <h2>Multiplexing Ratio</h2>
+  <img src='images/plot_multiplexing_ratio_cdf.png' />
+</section>
+
+<section class="slide">
+  <h2>Connection Size Distribution</h2>
+  <img src='images/plot_connection_sizes_cdf.png' />
+</section>
+
+<section class="slide">
+  <h1>Real World Trials</h1>
+</section>
+<!--
+
+  All right, Brian, all you...
+
+-->
+
+<!-- End slides. -->
 
 <!-- Begin extension snippets. Add or remove as needed. -->
 
