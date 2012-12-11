@@ -1,4 +1,4 @@
-infile = ~/Desktop/report.json
+infile = ./report.json
 sitelist = ../spdyathome/data/sitelist.txt
 sitedump = ../spdyathome/data/sitedump.json
 
