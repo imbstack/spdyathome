@@ -1,0 +1,7 @@
+set title 'Speedup vs. asset count(site basis)'
+set term png
+set output 'plot10.png'
+set xlabel 'Site asset count (bytes)'
+set ylabel 'Time Saved (seconds)'
+set nokey
+plot 'plot10.txt'

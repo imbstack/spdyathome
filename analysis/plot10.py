@@ -1,6 +1,6 @@
 #!/usr/bin/python
 """
-8. scatter of speedup vs site size
+10. scatter of speedup vs asset count
 """
 import sys
 import json
@@ -34,7 +34,4 @@ if __name__ == '__main__':
             if spdy == -1 or http == -1:
                 continue
             # Print avg of time to download, difference in speed pairs
-            size = 0
-            for asset in sites[site]['assets'].values():
-                size += int(asset['size'])
-            print size, http - spdy
+            print len(sites[site]['assets']), http - spdy
