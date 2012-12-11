@@ -16,6 +16,8 @@ if __name__ == '__main__':
                 continue
             spdy = float(vals['spdy']['time'])
             http = float(vals['http']['time'])
+            if spdy == -1 or http == -1:
+                continue
             sd.append(http - spdy)
         speed_diffs.append(sum(sd)/len(sd))
     for x in sorted(speed_diffs):

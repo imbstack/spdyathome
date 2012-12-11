@@ -1,17 +1,14 @@
 #!/usr/bin/python
 """
-1. plot of difference between speeds
+2. scatter of speed difference vs total time taken
 """
 import sys
 import json
 
 if __name__ == '__main__':
     f = open(sys.argv[1])
-    speed_diffs = []
     for line in f:
         blob = json.loads(line)
-        count = 0
-        good = 0
         for site,vals in blob.items():
             if type(vals) != dict:
                 continue
@@ -19,6 +16,5 @@ if __name__ == '__main__':
             http = float(vals['http']['time'])
             if spdy == -1 or http == -1:
                 continue
-            speed_diffs.append(http - spdy)
-    for x in sorted(speed_diffs):
-        print x
+            # Print avg of time to download, difference in speed pairs
+            print (http + spdy)/2, http - spdy
