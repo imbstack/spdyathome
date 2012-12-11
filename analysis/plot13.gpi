@@ -1,0 +1,7 @@
+set title 'ordering of site averages'
+set term png
+set output 'plot13.png'
+set ylabel 'Average Time Saved (seconds)'
+set xlabel 'Site'
+set nokey
+plot 'plot13.txt'
