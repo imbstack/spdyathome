@@ -20,7 +20,7 @@
     urlcolor=black
 }
 
-\title{An Investigation of the SPDY Protocol}
+\title{An Analysis of the SPDY Protocol as a Candidate for HTTP/2.0}
 \date{\today}
 \author{Brian Stack\thanks{ bis12@case.edu, Case Western Reserve University,
 Cleveland, OH 44106}, Tom Dooner\thanks{ ted27@case.edu }}
@@ -122,10 +122,11 @@ also allowing for streaming.
 \item[Streaming] Streams are bidirectional and are used to send out of order
 responses to requests. Importantly, streams can have priorities set by the
 creator of the stream.  This, in conjunction with server-push (defined next)
-allows for more important assets to be sent over the wires first.  An example of
-the usefulness of this feature is a webpage with many images that are
-unimportant for the actual content and layout of the page.  In that case, the
-images could be given a low priority and sent last.
+allows for more important assets (images, javascripts, stylesheets, etc.) to be
+sent over the wires first.  An example of the usefulness of this feature is a
+webpage with many images that are unimportant for the actual content and layout
+of the page.  In that case, the images could be given a low priority and sent
+last.
 \item[Server-Push] Once a server receives a request for an asset, if it is aware
 of closely connected assets, it may send them behind the original response,
 without waiting for the client to request them.  This will pre-populate the
@@ -215,17 +216,29 @@ proposed in \S\ref{sec:research/client-server}.
 \subsection{Web Asset Scraper}
 \label{sec:research/scraper}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-The server described in \S\ref{sec:project/server} needs to correctly simulate
-real world webpages. In order to facilitate this, websites from the Alexa
-rankings\footnote{\url{http://www.alexa.com}} have been scraped and the size and
-number of assets on each recorded.  This database will be accessed by the server
-upon each request in order to determine which data to return.  Great
-consideration was taken to make sure that this data accurately represents the
-state of the web, including executing javascript from each page in a headless
-browser in order to find dynamically loaded assets\footnote{Thanks to Tom Dooner
-for doing much implementation of this part of the collecting}. This is not part
-of the proposed project as the work has already been completed in conjunction
-with another student.
+The server described in \S\ref{sec:research/server} needs to correctly simulate
+real world webpages. In order to achieve this, we created a web scraping tool
+which scraped websites chosen from the Alexa most popular websites
+list\footnote{\url{http://www.alexa.com}} and recorded the size and number of
+assets into a database.  This database will be accessed by the server upon each
+request in order to determine which data to return.  In order to accurately
+represent the original websites (and the state of the web), we employed a
+headless web browser PhantomJS\footnote{\url{http://phantomjs.org}} which
+mimicked a user's browser and thus requested all assets needed to render a web
+page, even the dynamically loaded ones buried in CSS rules or Javascript.
+
+We desire to record information that will allow us to assess the performance
+characteristics of SPDY for each website we scrape. We recorded, for each
+asset, the source IP we downloaded the asset from, the SSL certificate (if any)
+for the connection on which we downloaded the asset, and the asset's filename
+and filesize.
+
+Not every website supports SSL, and the Alexa list ranks websites by hostname
+combining SSL and non-SSL traffic. Since we are not measuring the time to
+download the asset, we can default to SSL for websites that support it, as we
+can determine useful information about the owner of assets from the SSL
+certificate. For sites that do not support SSL, we will request the non-SSL
+HTTP hostname.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection{Client/Server Implementation}
@@ -292,7 +305,17 @@ back.
 \section{Asset Characterization}
 \label{sec:assets}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-here is where we will discuss the asset measurement stuff.
+\subsection{SPDY Combination Strategy}
+SPDY's most complex new feature is the ability to multiplex requests for assets
+over a single TCP connection. In this way, a web page's assets can benefit from
+a warmed-up TCP connection which is not subject to the TCP slow start
+algorithm. Since SPDY is currently built atop SSL, SPDY can only combine assets
+with a mutually-agreeable SSL certificate.
+
+% we measure two approaches: splitting on SSL cert and IP and simply splitting
+% on SSL cert (as an upper bound for combination). The first method, ssl + ip,
+% is prone to some error due to the use of CDNs confusing our scraping of
+% assets.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Real World SPDY vs. HTTP}
