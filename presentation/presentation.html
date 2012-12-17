@@ -5,7 +5,7 @@
   <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
   <meta name="viewport" content="width=1024, user-scalable=no">
 
-  <title>Your deck.js Presentation</title>
+  <title>HTTP/2.0</title>
 
   <!-- Required stylesheet -->
   <link rel="stylesheet" href="deck.js/core/deck.core.css">
@@ -31,7 +31,7 @@
 <!-- Begin slides. Just make elements with a class of slide. -->
 
 <section class="slide title">
-  <h1>HTTP/2.0 &mdash; SPDY</h1>
+  <h1>The Quest For HTTP/2.0</h1>
 </section>
 
 <section class="slide">
@@ -39,7 +39,7 @@
 
   <h3>HTTP/1.0 &mdash; 1996</h3>
   <ul>
-    <li>One request, one asset</li>
+    <li>One connection, one asset</li>
     <li>Basic caching</li>
   </ul>
 
@@ -53,6 +53,17 @@
 
 <section class="slide">
   <h1>HTTP/2.0 ?</h1>
+</section>
+
+<section class="slide">
+  <h2>HTTP/2.0 Goals</h2>
+  <h3>Retain HTTP Semantics</h3>
+  <h3>Reduce Perceived Latency</h3>
+  <h3>Optimize HTTP Headers</h3>
+  <h3>Stop Breaking TCP</h3>
+  <ul>
+    <li>6 connections * 4 initcwd = 24 packets immediately</li>
+  </ul>
 </section>
 
 <section class="slide">
@@ -76,6 +87,34 @@
 </section>
 
 <section class="slide">
+  <h2>SPDY</h2>
+  <h3>Control Frame</h3>
+  <pre>
++----------------------------------+
+|C| Version(15bits) | Type(16bits) |
++----------------------------------+
+| Flags (8)  |  Length (24 bits)   |
++----------------------------------+
+|               Data               |
++----------------------------------+
+  </pre>
+</section>
+
+<section class="slide">
+  <h2>SPDY</h2>
+  <h3>Data Frame</h3>
+  <pre>
++----------------------------------+
+|C|       Stream-ID (31bits)       |
++----------------------------------+
+| Flags (8)  |  Length (24 bits)   |
++----------------------------------+
+|               Data               |
++----------------------------------+
+  </pre>
+</section>
+
+<section class="slide">
   <h2>Microsoft S+M</h2>
   <h3>Based on SPDY...</h3>
   <ul>
@@ -84,10 +123,13 @@
   </ul>
   <h3>...but over WebSockets, not SSL</h3>
   <h3>Optional Compression, Server Push</h3>
+  <ul>
+    <li>To save battery on mobile devices</li>
+  </ul>
 </section>
 
 <section class="slide">
-  <h2>Network Friendly</h2>
+  <h2>"Network Friendly"</h2>
   <h3>HTTP Header Overhaul</h3>
   <ul>
     <li>Register headers at beginning &rarr; they are assumed for subsequent requests</li>
@@ -96,8 +138,97 @@
   <h3>Content Streams</h3>
 </section>
 
-<!-- End slides. -->
+<section class="slide">
+  <h1>SPDY Asset Combination</h1>
+</section>
 
+<section class="slide">
+  <h2>How Can Assets be combined?</h2>
+  <h3>Single TCP Connection</h3>
+  <ul>
+    <li>Same IP Address</li>
+  </ul>
+  <h3>Over SSL</h3>
+  <ul>
+    <li>Valid SSL Certificate for host</li>
+  </ul>
+</section>
+
+<section class="slide">
+  <h2><s>Measurement</s> Scraping</h2>
+  <h3>1. Use <a href="http://phantomjs.org/">PhantomJS</a> to determine
+    assets on a page</h3>
+  <h3>2. Custom script which downloads every asset and records:</h3>
+  <ul>
+    <li>Filesize</li>
+    <li>SSL Certificate</li>
+    <li>Remote IP</li>
+  </ul>
+</section>
+
+<section class="slide">
+  <h2>An Assumption:</h2>
+  <h3>Rearrangement of Asset Delivery</h3>
+  <ul>
+    <li>Sites currently use things like:
+      <ul>
+        <li>Asset Host Sharding</li>
+        <li>CDNs</li>
+      </ul>
+    </li>
+    <li>We assume site owners would combine assets into SPDY streams</li>
+  </ul>
+</section>
+
+<section class="slide">
+  <h2>Multiplexing Ratio</h2>
+  <img src='images/plot_multiplexing.png' />
+</section>
+
+<section class="slide">
+  <h2>Multiplexing Ratio</h2>
+  <img src='images/plot_multiplexing_ratio_cdf.png' />
+</section>
+
+<section class="slide">
+  <h2>Connection Size Distribution</h2>
+  <img src='images/plot_connection_sizes_cdf.png' />
+</section>
+
+<section class="slide">
+  <h1>Real World Trials</h1>
+</section>
+
+<section class="slide">
+  <h2>Question: Is SPDY faster than HTTP?</h2>
+  <h3>According to Google, yes:</h3>
+    <blockquote>
+      "The results show a speedup over HTTP of 27% - 60% in page load time over
+      plain TCP (without SSL), and 39% - 55% over SSL."
+    </blockquote>
+</section>
+<section class="slide">
+  <h2>Simulation</h2>
+  <h3>1. Create Website Profiles from Scraped Data</h3>
+  <h3>2. Write Web Server(s)</h3>
+  <ul>
+    <li>Use Python's <a href='https://github.com/mnot/thor'>thor</a> for HTTP implementation</li>
+    <li>Create a SPDY implementation for thor</li>
+  </ul>
+  <h3>3. Distribute Client</h3>
+</section>
+
+<section class="slide">
+</section>
+<section class="slide">
+</section>
+
+<section class="slide">
+  <h2>Thanks!</h2>
+  <h3>Questions?</h3>
+</section>
+
+<!-- End slides. -->
 
 <!-- Begin extension snippets. Add or remove as needed. -->
 
