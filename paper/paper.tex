@@ -310,8 +310,59 @@ SPDY's most complex new feature is the ability to multiplex requests for assets
 over a single TCP connection. In this way, a web page's assets can benefit from
 a warmed-up TCP connection which is not subject to the TCP slow start
 algorithm. Since SPDY is currently built atop SSL, SPDY can only combine assets
-with a mutually-agreeable SSL certificate.
+with a mutually-agreeable SSL certificate. The assets will be combined into
+separate streams over the same TCP connection, thus ideally obtaining complete
+utilization of the connection and the benefit from TCP's eventual discovery of
+an accurate congestion window.
 
+In order to measure the efficiency of SPDY's asset combination, we must
+determine the benefit of combining assets. The authors of SPDY claim that the
+main benefit from asset combination is the reduction of network connections
+required~\cite{spdy-whitepaper}. Although the HTTP/1.1 specification allows for
+up to two simultaneous connections to servers, modern browsers willfully
+violate it in service of page load speed and will happily open up to six
+connections to each host. Websites have also been pushing the limits by
+creating semantically equivalent hostnames (i.e. assets1.example.com,
+assets2.example.com, etc.) for different asset servers so browsers will open
+six connections to each. Thus, browsers may wind up opening hundreds of
+connections immediately upon loading a page.
+
+SPDY's asset combination addresses this. In this section we will measure the
+difference in the number of connections required to load each page under two
+different assumptions: first that site owners could combine all assets with
+mutually-agreeable SSL certificates into one SPDY connection and second that
+site owners would combine all assets served by the same IP address \textit{and}
+with mutually-agreeable SSL certificates into one SPDY connection. Logically,
+the first method is an upper bound for the number of connections we can save,
+we estimate that the second method is more accurate for most websites but is a
+lower bound for websites which employ CDNs or asset host sharding.
+
+\subsection{SSL-only Asset Combination}
+\begin{figure}[h!]
+\includegraphics[width=0.4\textwidth,angle=270]{plots/asset_combination_only_ssl_ratio.eps}
+\caption{Connection Ratio -- SSL-only Combination Strategy}
+\label{fig:combination-ssl}
+\end{figure}
+The results in Figure \ref{fig:combination-ssl} assume that all assets
+described by a mutually-compatible SSL certificate are combined into one SPDY
+connection. Two assets have \textit{mutually-compatible} SSL certificates if
+their SSL certificates are valid for the host of the other asset (with either
+the Canonical Name or the Alternative Hostnames). In this way, we
+systematically combine assets by adding them to the largest group with which
+they are compatible. We then compare the number of asset groups (SPDY
+connections) with the number of assets (HTTP connections). The CDF of the ratio
+for the Alexa top 100,000 websites is plotted.
+
+\subsection{SSL-and-IP Asset Combination}
+\begin{figure}[h!]
+\includegraphics[width=0.4\textwidth,angle=270]{plots/asset_combination_ssl_and_ip_ratio.eps}
+\caption{Connection Ratio -- SSL-and-IP Combination Strategy}
+\label{fig:combination-ssl-and-ip}
+\end{figure}
+The results in Figure \ref{fig:combination-ssl-and-ip} assume that all assets
+described by a mutually-compatible SSL certificate and that are downloaded from
+the same IP in practice are combined into one SPDY connection.
+\subsection{Connection Sizes}
 % we measure two approaches: splitting on SSL cert and IP and simply splitting
 % on SSL cert (as an upper bound for combination). The first method, ssl + ip,
 % is prone to some error due to the use of CDNs confusing our scraping of
