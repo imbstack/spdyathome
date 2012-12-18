@@ -339,6 +339,7 @@ lower bound for websites which employ CDNs or asset host sharding.
 
 \subsection{SSL-only Asset Combination}
 \begin{figure}[h!]
+\centering
 \includegraphics[width=0.4\textwidth,angle=270]{plots/asset_combination_only_ssl_ratio.eps}
 \caption{Connection Ratio -- SSL-only Combination Strategy}
 \label{fig:combination-ssl}
@@ -355,6 +356,7 @@ for the Alexa top 100,000 websites is plotted.
 
 \subsection{SSL-and-IP Asset Combination}
 \begin{figure}[h!]
+\centering
 \includegraphics[width=0.4\textwidth,angle=270]{plots/asset_combination_ssl_and_ip_ratio.eps}
 \caption{Connection Ratio -- SSL-and-IP Combination Strategy}
 \label{fig:combination-ssl-and-ip}
@@ -362,7 +364,23 @@ for the Alexa top 100,000 websites is plotted.
 The results in Figure \ref{fig:combination-ssl-and-ip} assume that all assets
 described by a mutually-compatible SSL certificate and that are downloaded from
 the same IP in practice are combined into one SPDY connection.
+
 \subsection{Connection Sizes}
+\begin{figure}[h!]
+\centering
+\includegraphics[width=0.4\textwidth]{plots/asset_combination_connection_sizes.eps}
+\caption{Connection Sizes After Asset Combination}
+\label{fig:connection-sizes}
+\end{figure}
+
+Figure \ref{fig:connection-sizes} describes the size of connections when all
+assets are combined together as described in the SSL-and-IP combination
+strategy. 70\% of SPDY connections are noticeably larger than HTTP connections,
+up to almost an order of magnitude in some cases. Some assets do not benefit
+from SPDY's combination: small assets like Google Analytics tracking
+Javascript, or external libraries used on web pages such as jQuery. These
+comprise the left part of the SPDY curve.
+
 % we measure two approaches: splitting on SSL cert and IP and simply splitting
 % on SSL cert (as an upper bound for combination). The first method, ssl + ip,
 % is prone to some error due to the use of CDNs confusing our scraping of

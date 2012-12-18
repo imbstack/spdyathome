@@ -5,7 +5,7 @@ paper.pdf: paper.bbl
 	date > ../TODO
 	grep -n TODO ./*.tex >> ../TODO
 
-paper.dvi:  paper.tex
+paper.dvi:  paper.tex plots/*
 	latex paper
 	bibtex paper
 	latex paper
