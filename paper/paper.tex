@@ -83,7 +83,7 @@ which these request/response pairs are transmitted.
 The current self-imposed deadline for HTTP/2.0 is July
 2013~\cite{httpbis-charter}.  So far, three likely starting points for
 the specification have been proposed: Google's SPDY, Microsoft's Speed +
-Mobility, and a "Network-Friendly" proposal from a handful of Open Source
+Mobility, and a ``Network-Friendly'' proposal from a handful of Open Source
 authors. The three will be briefly outlined beginning in
 \S\ref{sec:background/spdy} and then the remainder of the paper will focus on
 measurements of the most viable candidate for HTTP/2.0, SPDY.
@@ -148,9 +148,9 @@ layer.  In addition, S+M uses an HTTP header to negotiate the protocol upgrade
 rather than SPDY's use of the SSL/TLS handshake to do this same thing. This
 adds another round trip after the connection is established, and requires the
 endpoint to analyze the HTTP headers. This is friendly to intermediate proxies
-that do not support S+M, but it quite a bit of latency to beginning the actual
-communication and is one of the reasons that Facebook endorsed SPDY over
-S+M~\cite{fbook}.
+that do not support S+M, but it adds additional latency (1 RTT) to beginning
+the actual communication and is one of the reasons that Facebook endorsed SPDY
+over S+M~\cite{fbook}.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection{Network-Friendly}
@@ -202,13 +202,13 @@ added cost in terms of development time to support this protocol everywhere?
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 This project sets out to answer that question in two fashions. First, we will
 perform an in-depth examination of what is the limiting factor of current
-HTTP/1.1 including a review of literature in the area and a characterization of
-real-world web page asset size distribution in \S\ref{sec:assets} (and
-how we predict the same assets will load if loaded over SPDY). Since SPDY can
-combine asset requests into a single multiplexed TCP connection, we identify
-this as a significant source of performance improvement over HTTP. We will
-perform this by collecting the assets from the top Alexa sites with the Web
-Asset Scraper described in \S\ref{sec:research/scraper}.
+HTTP/1.1 including a characterization of real-world web page asset size
+distribution in \S\ref{sec:assets} and how we predict the same assets will load
+if loaded over SPDY. Since SPDY can combine asset requests into a single
+multiplexed TCP connection, we identify this as a significant source of
+performance improvement over HTTP. We will perform this by collecting the
+assets from the top Alexa sites with the Web Asset Scraper described in
+\S\ref{sec:research/scraper}.
 
 But how will \textit{real} web sites perform when their assets are multiplexed?
 Since only a handful of (already optimized) sites implement SPDY, we must
@@ -244,6 +244,8 @@ download the asset, we can default to SSL for websites that support it, as we
 can determine useful information about the owner of assets from the SSL
 certificate. For sites that do not support SSL, we will request the non-SSL
 HTTP hostname.
+
+From this data, we analyzed the theoretical benefit of asset combination for SPDY in Section \ref{sec:assets}.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection{Client/Server Implementation}
@@ -378,7 +380,8 @@ the same IP in practice are combined into one SPDY connection.
 
 Figure \ref{fig:combination-ssl-and-ip} shows that, in the common-to-worst
 case, 90\% of sites will halve the number of connections by switching to SPDY
-and 40\% could load using one-fifth the connections.
+and 40\% could load using one-fifth the connections while only about 7\% see no
+improvement with SPDY.
 
 \subsection{Connection Sizes}
 \begin{figure}[h!]
