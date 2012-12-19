@@ -215,15 +215,14 @@ proposed in \S\ref{sec:research/client-server}.
 \subsection{Web Asset Scraper}
 \label{sec:research/scraper}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-The server described in \S\ref{sec:project/server} needs to correctly simulate
+The server described in \S\ref{sec:research/server} needs to correctly simulate
 real world webpages. In order to facilitate this, websites from the Alexa
 rankings\footnote{\url{http://www.alexa.com}} have been scraped and the size and
 number of assets on each recorded.  This database will be accessed by the server
 upon each request in order to determine which data to return.  Great
 consideration was taken to make sure that this data accurately represents the
 state of the web, including executing javascript from each page in a headless
-browser in order to find dynamically loaded assets\footnote{Thanks to Tom Dooner
-for doing much implementation of this part of the collecting}. This is not part
+browser in order to find dynamically loaded assets. This is not part
 of the proposed project as the work has already been completed in conjunction
 with another student.
 
