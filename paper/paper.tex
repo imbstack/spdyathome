@@ -92,7 +92,7 @@ measurements of the most viable candidate for HTTP/2.0, SPDY.
 \subsection{SPDY}
 \label{sec:background/spdy}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-The most interesting and likely to succeed proposal, SPDY is rather mature
+The most interesting and likely to succeed proposal, SPDY, is rather mature
 at this point in time, having been implemented in both the most recent Chrome
 and Firefox browsers in addition to having modules and patches for both the
 Apache and Nginx web servers which allow them to speak SPDY.
@@ -105,37 +105,70 @@ notable because it gives empiricists the ability to measure real-world
 performance metrics whilst implementing websites may benefit from the new
 protocol in the short term.
 
-The most important parts of SPDY as of draft 3 (most recent complete version
-\cite{spdy3}) are framing and streams.
+We will briefly outline the key features of SPDY.
 
-\begin{description}
-\item[Framing Layer] This binary protocol provides a layer on top of a reliable transport
-protocol (recommended to be TCP) and provides a way for HTTP request/response
-pairs to be issued and received out of order over a single transport layer
-connection.  This provides an expected performance improvement of HTTP/1.1 by
-not requiring multiple connections to the host to be made in order to
-parallelize resource acquisition. There are 2 types of frames: control
-frames and data frames. Control frames which are responsible for managing the
-lifecycle of a stream whereas data frames simply transmit data.
-\item[Streaming] Streams are bidirectional and are used to send out of order
-responses to requests. Importantly, streams can have priorities set by the
-creator of the stream.  This, in conjunction with server-push (defined next)
-allows for more important assets (images, javascripts, stylesheets, etc.) to be
-sent over the wires first.  An example of the usefulness of this feature is a
-webpage with many images that are unimportant for the actual content and layout
-of the page.  In that case, the images could be given a low priority and sent
-last.
-\item[Server-Push] Once a server receives a request for an asset, if it is aware
+\subsubsection{Framing Layer}
+This binary protocol is a layer on top of an already reliable transport
+protocol (recommended, but not required, to be SSL+TLS over TCP) and provides a
+way for HTTP requests and responses to be issued and received out of order over
+a single transport layer connection.  This provides an expected performance
+improvement over HTTP/1.1 by allowing connections to warm up after experiencing
+TCP's slow start. Longer connections will have more-accurate congestion window
+sizes, and thus the performance of requests will both be fair for early
+requests and fast for later requests.
+
+The framing layer, while taking steps to improve the speed of connections,
+maintains the semantics of HTTP.  For example, HTTP headers are sent in a
+HEADERS frame, which is a control frame used to convey the headers that would
+be sent over a normal HTTP connection.  There are several types of control
+frames including ones to set-up and tear-down streams (see
+\S\ref{sec:background/spdy/streaming}), to determine the latency of the
+connection, and other logistics as well.  The remainder of the traffic is
+conveyed as data frames.
+
+\subsubsection{Streaming}
+\label{sec:background/spdy/streaming}
+Streams are either unidirectional or bidirectional channels that are used to
+send multiplexed requests and responses.  Stream multiplexing differs from
+HTTP/1.1's pipelining in one important way: HTTP/1.1 enforces a FIFO queue of
+responses to requests whereas many SPDY streams' data may be interleaved.
+SPDY's stream multiplexing suffices to eliminate the inherent head-of-line
+blocking.
+
+Additionally, streams are prioritized by the creator of the stream.  This, in
+conjunction with server-push (defined next) allows for more important assets
+(images, javascripts, stylesheets, etc.) to be sent over the wire first.  An
+example of the usefulness of this feature is a webpage with many images that
+are unimportant for the actual content and layout of the page.  In that case,
+the images could be given a low priority and sent last.
+
+\subsubsection{Server Push}
+Once a server receives a request for an asset, if it is aware
 of closely connected assets, it may send them behind the original response,
 without waiting for the client to request them.  This will pre-populate the
-cache of the client and save a round trip time for each item.
-\item[Header Compression with Dictionary] If there are many small assets on a
-webpage, then a significant portion of the transmitted bytes will be due to HTTP
-headers rather than the actual content.  If this can be compressed, much
-bandwidth is saved~\cite{binoy}. Furthermore, bandwidth for large headers (such
-as cookies) will be saved by assuming headers present for future requests on
-the same stream and in new streams once initialized.
-\end{description}
+cache of the client and save a round trip time for each item. Since server push
+is an optimization for clients, it is up to the clients to make sure that it is
+indeed making their browsing experience faster. For example, the SPDY
+protocol\cite{spdy3} states that ``browsers MUST implement throttles to
+protect against unreasonable push attacks.'' Or, browsers may deny to open a
+server push stream to receive an asset if it is already cached.
+
+\subsubsection{Header Compression with Dictionary}
+If there are many small assets on a webpage, then with HTTP/1.1 a significant
+portion of the transmitted bytes will be due to HTTP headers rather than the
+actual content. One low-hanging fruit for optimization is to compress
+commonly-seen ASCII headers using zlib, which will save lots of of overhead on
+sites with lots of requests~\cite{binoy}.
+
+The SPDY specification includes a pre-seeded zlib dictionary of common HTTP
+headers, so that even the beginnings of connections can benefit from header
+compression.
+
+\subsubsection{Security}
+Although the current SPDY specification does not require mandatory encryption
+over SSL, it is a design goal of SPDY to improve security: The SPDY designers
+``believe that the long-term future of the web depends on a secure network
+connection''\cite{spdy-whitepaper}.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection{Speed+Mobility}
