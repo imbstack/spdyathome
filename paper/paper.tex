@@ -1,4 +1,4 @@
-\documentclass[11pt,letterpaper,notitlepage]{article}
+\documentclass[10pt,letterpaper,notitlepage]{article}
 
 \usepackage{fullpage}
 \usepackage{enumerate}
@@ -11,6 +11,9 @@
 \usepackage{appendix}
 \usepackage{framed}
 \usepackage{graphicx}
+\usepackage{multicol}
+\usepackage{float}
+
 
 \hypersetup{
     colorlinks,%
@@ -53,7 +56,7 @@ to go.
 \label{sec:background}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 HTTP is one of the most widely used application-level protocols. Initially
-written in 1996~\cite{http1rfc}, HTTP was written for a different era of web
+written in 1996~\cite{http1rfc}, it was created for a different era of web
 sites -- before streaming video websites, before asset-heavy web pages, and
 before mostly-Javascript web applications like Google's Gmail, Twitter, and
 Facebook.
@@ -86,7 +89,7 @@ the specification have been proposed: Google's SPDY, Microsoft's Speed +
 Mobility, and a ``Network-Friendly'' proposal from a handful of Open Source
 authors. The three will be briefly outlined beginning in
 \S\ref{sec:background/spdy} and then the remainder of the paper will focus on
-measurements of the most viable candidate for HTTP/2.0, SPDY.
+measurements of the most viable candidate for HTTP/2.0 -- SPDY.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection{SPDY}
@@ -245,7 +248,8 @@ can determine useful information about the owner of assets from the SSL
 certificate. For sites that do not support SSL, we will request the non-SSL
 HTTP hostname.
 
-From this data, we analyzed the theoretical benefit of asset combination for SPDY in Section \ref{sec:assets}.
+From this data, we analyzed the theoretical benefit of asset combination for
+SPDY in \S\ref{sec:assets}.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection{Client/Server Implementation}
@@ -253,10 +257,10 @@ From this data, we analyzed the theoretical benefit of asset combination for SPD
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 The simulation uses a client-server architecture to gather data about the
 effectiveness of the SPDY protocol. The server can be run from any standard
-machine, but only a single one will be run for the experiment.  The client (the
-``collector'') is the real measurement platform and will be distributed to
+machine, but only two will be run for the experiment.  The client (the
+``collector'') is the real measurement platform and has been distributed to
 volunteers to run in order to test SPDY in a number of different network
-conditions.  The client will collect data and report back to the server
+conditions.  The client collects data and reports back to the server
 anonymous information about how performant the protocol was in addition to
 helpful details that may help break down what caused variations in results.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -272,41 +276,62 @@ $1-100$ top sites & 10\% of $100-1000$ sites & 1\% of $1000-10000$ sites \\
 \end{tabular}
 \end{center}
 
-These sites will be selected randomly and made into a list for the client to
+These sites have been selected randomly and made into a list for the client to
 consume. This is a total of 280 sites that run the gamut from representing the
 largest and most frequented sites on the web, down to some of the most obscure.
+The full list of sites used is attached in Appendix~\ref{app:sitelist}.
 
 The client can access the server using standard RESTful paths in two fashions
 \begin{itemize}
 \item \texttt{/site/<n>} where \texttt{n} is an integer that specifies the index
-of the website simulation that is being accessed.  This will result in the
-server returning fully formed HTML containing assets that map to the proper size
-of the assets from the scraped page.  The rest of the document will be filled
-with random bytes until it is the proper size of the recorded webpage that was
-scraped.
-\item \texttt{/img/<m>} where \texttt{m} is an integer specifying the size of the
+of the site to download. A simple JSON list of each of the assets for a site is
+returned, in addition to random junk to fill the rest of the size of the page.
+
+\item \texttt{/asset/<m>.(c|u)} where \texttt{m} is an integer specifying the size of the
 asset that should be downloaded. So, in the case that we found a 2 MB image on a
 webpage that is being simulated, \texttt{m} will be 2,000,000 and the server
-will return a binary blob of that size. It is possible that this could take into
-account the different compressibility of text to images.  For instance, an asset
+will return a binary blob of that size. The \texttt{c} and \texttt{u} appended
+to the end changes whether the asset should be compressed or not.  For instance, an asset
 that was javascript should have somewhat less random data supplied so that it
 may compress more readily as compared to an image which doesn't compress very
 much on top of its generally pre-compressed format.
 \end{itemize}
 
+Each asset has been determined to either be ``primary'' or ``secondary'' with
+primary assets coming from the original host server itself and secondary coming
+from any other host.  An example of secondary assets would be Google ads.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsubsection{Thor}
+\label{sec:research/thor}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+Both the client and server use the Thor library for HTTP and SPDY communication.
+They share a common core of TCP server and other utilities, so the comparison
+between the two protocols is as close as possible.  The library had to be
+updated to complete its support for SPDY, the version of the library that was
+used for the project can be found at \url{https://github.com/bis12/thor}.
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsubsection{Client}
 \label{sec:research/client}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-The client should be cross platform and easy to run.  The ultimate goal is for
-it to be as simple as downloading and clicking on an executable of some form.
-The client will access each of the tests specified in the list in turn using
-both SPDY and HTTP/1.1 with SSL/TLS and
-record timing information about how long it takes for each request to complete.
-After this step is complete, the client will gather data about its location and
-other considerations in order to return to the server for analysis.  All data
-returned will be presented to the user to approve \textbf{before} being sent
-back.
+The client works in the following way
+\begin{enumerate}
+    \item Connect to the server and download the list of sites to access.
+        Randomize the order of the sites and continue.
+    \item Connect to each of these sites in turn with both HTTP and SPDY clients
+        and download the asset list for each.  The order that HTTP and SPDY
+        connect is randomized each time also.
+    \item Download each of the assets for each site from either the primary or
+        secondary host depending on the original location.
+    \item Once all assets are fetched, or a certain timeout is reached, the TCP
+        connections are torn down and the download of that site is considered
+        complete or ends in an error.
+\end{enumerate}
+Once all of the sites have been downloaded, the results are collected and sent
+back to the server, in addition to recording the IP address and a unique
+identifier for the host so that repeats from the same location and computer can
+be compared.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Asset Characterization}
@@ -408,9 +433,116 @@ comprise the left part of the SPDY curve.
 \section{Real World SPDY vs. HTTP}
 \label{sec:realworld}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-here is where we will discuss brian's spdyathome results
+In the following section we will present the results of the data collection and
+a short analysis of the results.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.8\textwidth]{plots/plot1.eps}
+\caption{A simple comparison of dowload times for each site downloaded across
+all collections from all clients.  Positive is time saved by SPDY and negative
+is time added.}
+\label{fig:plot1}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.8\textwidth]{plots/plot9.eps}
+\caption{Similar to Figure~\ref{fig:plot1} except with each site averaged across
+responses.}
+\label{fig:plot9}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.8\textwidth]{plots/plot3.eps}
+\caption{This is identical to Figure~\ref{fig:plot1} except with each response
+averaged across all of their sites.}
+\label{fig:plot3}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.8\textwidth]{plots/plot2.eps}
+\caption{A scatter plot comparing time to download site to the average of the
+    two times it took to download the site.  No correlation appears to be
+present.}
+\label{fig:plot2}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.8\textwidth]{plots/plot8.eps}
+\caption{Scatter of speedup vs the aggregate size in bytes of the site
+downloaded.}
+\label{fig:plot8}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.8\textwidth]{plots/plot12.eps}
+\caption{Scatter of speedup vs the aggregate size in bytes of a site averaged
+across responders.}
+\label{fig:plot12}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.8\textwidth]{plots/plot10.eps}
+\caption{Scatter of speedup vs the number of assets per site
+downloaded.}
+\label{fig:plot10}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.8\textwidth]{plots/plot5.eps}
+\caption{A plot to find if each unique responder with greater than 5 responses
+had a similar result each time.}
+\label{fig:plot5}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.8\textwidth]{plots/plot6.eps}
+\caption{Similar to Figure~\ref{fig:plot1}, but simply in order of response
+    rather than ordered by savings.  This is to find if some sort of confounding
+variable affected the responses across some part of time.}
+\label{fig:plot6}
+\end{figure}
 
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Final Collections}
+\label{sec:realworld/fc}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+At the time of this analysis there were 41 unique responders from 42 unique IP
+addresses. They combined for a total of 482 responses.  Each test took roughly
+25 minutes to run, so it would be difficult to expand the test further in terms
+of the number of sites downloaded.  The relatively small number of results makes
+it difficult to accurately say anything about each responder in aggregate, but
+this accounts for many tens of thousands of sites downloaded, so trends are
+certainly evident and accurate with regards to the sites.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Analysis}
+\label{sec:realworld/analysis}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+Each of the previous plots indicate one of two things
+\begin{itemize}
+    \item  There was no correlation between size of site, number of assets, or
+        any other metric and the speedup from SPDY.
+    \item There was practically no speedup from SPDY
+\end{itemize}
+
+This is contradictory to the results obtained by many other experimenters and
+brings the accuracy of this experiment into question.  Clearly more work needs
+to be done in order to find the cause of this discrepancy.  It seems likely that
+the architecture of the server and client caused greater overheads with
+variability than SPDY could have overcome and this hides the improvements made
+with SPDY. It is also possible that there is an error in the implementation or
+that some aspect of the design of the experiment is fundamentally flawed.  This
+will need to be investigated before possibly going forward with this work.
 % I don't want to remove this wholesale but I don't think it is relevant
 % anywhere else in the paper. Maybe it fits somewhere?
 % -Tom
@@ -436,4 +568,281 @@ here is where we will discuss brian's spdyathome results
 \bibliographystyle{plain}
 \bibliography{rfc,citations}
 
+\appendix
+\section{List of Sites Used in Experiment}
+\label{app:sitelist}
+\tiny
+\begin{multicols}{4}
+\begin{verbatim}
+https://www.multiply.com
+https://www.google.ru
+http://www.rr.com
+http://www.itimes.com
+http://www.chinanews.com
+http://www.livestream.com
+https://www.google.com.hk
+http://www.facemoods.com
+http://www.ebay.de
+http://www.2345.com
+https://www.google.lk
+https://www.thepiratebay.se
+http://www.hao123.com
+http://www.tmall.com
+https://www.pinterest.com
+https://www.google.com.br
+http://www.slutload.com
+https://www.maxbounty.com
+https://www.thenextweb.com
+https://www.google.es
+http://www.wikihow.com
+http://www.xscores.com
+http://www.2ch.net
+http://www.jrj.com.cn
+https://www.facebook.com
+https://www.apple.com
+https://www.google.com.mx
+http://www.actuweb.net
+https://www.google.co.jp
+https://www.godaddy.com
+https://www.sueddeutsche.de
+http://www.anonym.to
+https://www.fotolia.com
+http://www.imgur.com
+https://www.sourceforge.net
+http://www.espn.go.com
+https://www.google.com
+https://www.utoronto.ca
+https://www.google.co.in
+https://www.mailchimp.com
+http://www.people.com
+https://www.midphase.com
+http://www.okbuy.com
+http://www.yoka.com
+http://www.4399.com
+https://www.amazon.fr
+http://www.livedoor.com
+http://www.xhamster.com
+http://www.tocmai.ro
+http://www.vod.pl
+https://www.citibank.com
+http://www.anonymouse.org
+https://www.youtube.com
+http://www.vporn.com
+http://www.zedo.com
+http://www.lashou.com
+https://www.google.co.nz
+http://www.optymalizacja.com
+https://www.yahoo.com
+http://www.ldlc.com
+http://www.detik.com
+http://www.bunshun.jp
+https://www.freedigitalphotos.net
+http://www.imdb.com
+https://www.odnoklassniki.ru
+https://www.tu-chemnitz.de
+http://www.statigr.am
+http://www.avg.com
+https://www.wordpress.com
+http://www.directlyrics.com
+http://www.bing.com
+https://www.pornhub.com
+https://www.aol.com
+https://www.google.co.kr
+https://www.americangreetings.com
+https://www.adobe.com
+http://www.trklnks.com
+https://www.leagueoflegends.com
+https://www.google.fr
+http://www.funnyjunk.com
+https://www.google.it
+https://www.orkut.com
+http://www.fc2.com
+https://www.egopay.com
+http://www.techcrunch.com
+http://www.ask.com
+https://www.zoopla.co.uk
+https://www.join.me
+https://www.google.ca
+https://www.taz.de
+http://www.soso.com
+https://www.linkedin.com
+https://www.mail2web.com
+http://www.meristation.com
+http://www.godlikeproductions.com
+http://www.neogaf.com
+https://www.google.co.il
+https://www.amazon.de
+http://www.taleo.net
+http://www.babylon.com
+http://www.taobao.com
+http://www.reddit.com
+https://www.amazon.co.jp
+http://www.baidu.com
+http://www.xvideos.com
+http://www.lavanguardia.com
+http://www.ntvmsnbc.com
+http://www.nyaa.eu
+http://www.wcarev.com
+http://www.renren.com
+http://www.rakuten.co.jp
+http://www.neatorama.com
+http://www.alibaba.com
+https://www.live.com
+https://www.sape.ru
+https://www.googleusercontent.com
+http://www.twitpic.com
+https://www.sahibinden.com
+https://www.google.com.pe
+https://www.boards.ie
+https://www.nix.ru
+http://www.jimdo.com
+http://www.lemonde.fr
+http://www.zappos.com
+https://www.smashwords.com
+http://www.engadget.com
+https://www.tumblr.com
+https://www.google.dk
+http://www.oriflame.com
+http://www.ne.jp
+https://www.vk.com
+https://www.adnxs.com
+http://www.majikichi.com
+http://www.youporn.com
+https://www.tagged.com
+http://www.videoweed.es
+https://www.spirithalloween.com
+http://www.bbc.com
+https://www.9gag.com
+http://www.gizmodo.com
+http://www.msn.com
+http://www.linkwithin.com
+http://www.vend-o.com
+http://www.crsky.com
+https://www.twitter.com
+http://www.zedge.net
+https://www.wordpress.org
+http://www.amawebs.com
+http://www.huffingtonpost.com
+http://www.rediff.com
+http://www.wigetmedia.com
+https://www.dailymotion.com
+http://www.yayabay.net
+http://www.sogou.com
+https://www.google.com.tr
+https://www.livejournal.com
+https://www.zopim.com
+http://www.shaadi.com
+http://www.medscape.com
+https://www.flickr.com
+http://www.ahram.org.eg
+http://www.firstclass-download.com
+https://www.conduit.com
+https://www.careerbuilder.com
+https://www.amazon.co.uk
+https://www.backcountry.com
+http://www.zippyshare.com
+https://www.netflix.com
+http://www.daum.net
+http://www.yahoo.co.jp
+http://www.slate.com
+http://www.stackoverflow.com
+http://www.matichon.co.th
+http://www.politiken.dk
+https://www.expedia.com
+https://www.sportsmansguide.com
+http://www.lastfm.es
+https://www.amazon.com
+http://www.tabnak.ir
+https://www.adf.ly
+https://www.blogspot.com
+http://www.welt.de
+https://www.instantcheckmate.com
+http://www.hubpages.com
+http://www.serialu.net
+https://www.google.de
+http://www.clubpenguin.com
+https://www.vodafone.co.uk
+http://www.pcmag.com
+http://www.codecademy.com
+http://www.t.co
+http://www.mlb.com
+https://www.redtube.com
+http://www.ebay.com
+http://www.go.com
+http://www.instagram.com
+http://www.28tlbb.com
+https://www.google.com.au
+http://www.about.com
+https://www.blogger.com
+http://www.extratorrent.com
+http://www.digitaldesire.com
+http://www.youtu.be
+http://www.adultfriendfinder.com
+https://www.ucm.es
+http://www.vcommission.com
+https://www.mail.ru
+http://www.programme-tv.net
+https://www.bbc.co.uk
+http://www.hafeezcentre.pk
+https://www.google.pl
+https://www.google.co.id
+http://www.ebay.co.uk
+http://www.apontador.com.br
+https://www.google.co.uk
+https://www.wikipedia.org
+https://www.web.com
+http://www.ask.fm
+http://www.craigslist.org
+https://www.nokia.com
+http://www.elahmad.com
+https://www.jobrapido.com
+http://www.yesky.com
+http://www.tudou.com
+https://www.hbr.org
+http://www.khl.ru
+http://www.flipora.com
+http://www.babytree.com
+http://www.pcauto.com.cn
+http://www.1uuc.com
+http://www.ifeng.com
+http://www.youku.com
+https://www.uchicago.edu
+http://www.pptv.com
+http://www.formulatv.com
+http://www.searchengines.ru
+http://www.cnn.com
+http://www.fux.com
+http://www.alisoft.com
+http://www.drtuber.com
+http://www.narod.ru
+http://www.msn.com.cn
+http://www.sohu.com
+http://www.globalgrind.com
+http://www.icicibank.com
+http://www.ndtv.com
+http://www.tuan800.com
+http://www.yandex.ru
+http://www.grindtv.com
+http://www.w3schools.com
+https://www.paypal.com
+http://www.ccb.com
+http://www.uol.com.br
+http://www.mywebsearch.com
+http://www.porntube.com
+http://www.tinypic.com
+http://www.hypergames.net
+89909 http://www.tianya.cn
+http://www.126.com
+http://www.newbigtube.com
+https://www.microsoft.com
+http://www.chinaren.com
+http://www.laptopmag.com
+http://www.biglion.ru
+http://www.weibo.com
+http://www.xunlei.com
+http://www.livejasmin.com
+http://www.super.cz
+https://www.fandango.com
+\end{verbatim}
+\end{multicols}
 \end{document}

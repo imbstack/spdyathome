@@ -15,4 +15,5 @@ src/
 
 analysis/plot*.txt
 analysis/plot*.png
+analysis/plot*.eps
 analysis/geoip.txt

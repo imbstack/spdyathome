@@ -1,6 +1,6 @@
 set title 'Speedup vs. site size(site basis)'
-set term png
-set output 'plot8.png'
+set term eps
+set output 'plot8.eps'
 set xlabel 'Site size (bytes)'
 set ylabel 'Time Saved (seconds)'
 set nokey

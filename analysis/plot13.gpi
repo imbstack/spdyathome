@@ -1,6 +1,6 @@
 set title 'ordering of site averages'
-set term png
-set output 'plot13.png'
+set term eps
+set output 'plot13.eps'
 set ylabel 'Average Time Saved (seconds)'
 set xlabel 'Site'
 set nokey

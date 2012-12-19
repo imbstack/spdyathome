@@ -1,6 +1,6 @@
 set title 'Multiple Responders'
-set term png
-set output 'plot5.png'
+set term eps
+set output 'plot5.eps'
 set ylabel 'Average Time Saved (seconds)'
 set nokey
 unset xtics

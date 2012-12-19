@@ -1,6 +1,6 @@
 set title 'Speedup vs. total site download time(site basis)'
-set term png
-set output 'plot2.png'
+set term eps
+set output 'plot2.eps'
 set xlabel 'Avg time to download site. (seconds)'
 set ylabel 'Time Saved (seconds)'
 set nokey

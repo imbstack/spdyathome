@@ -2,10 +2,16 @@ infile = ./report.json
 sitelist = ../spdyathome/data/sitelist.txt
 sitedump = ../spdyathome/data/sitedump.json
 
-plots: plot1.png plot3.png plot9.png plot2.png plot5.png geoip.txt plot6.png plot12.png plot13.png plot8.png plot10.png
+#plots: plot1.png plot3.png plot9.png plot2.png plot5.png geoip.txt plot6.png plot12.png plot13.png plot8.png plot10.png
+#	@echo "Complete"
+
+plots: plot1.eps plot3.eps plot9.eps plot2.eps plot5.eps geoip.txt plot6.eps plot12.eps plot13.eps plot8.eps plot10.eps
 	@echo "Complete"
 
 %.png: %.gpi %.txt
+	gnuplot $<
+
+%.eps: %.gpi %.txt
 	gnuplot $<
 
 %.txt: %.py
@@ -21,6 +27,6 @@ geoip.txt: geoip.rb
 	ruby geoip.rb $(infile) > ./geoip.txt
 
 clean:
-	rm -f plot*.txt plot*.png geoip.txt
+	rm -f plot*.txt plot*.png geoip.txt plot*.eps
 
 .PHONY: clean

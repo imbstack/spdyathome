@@ -1,6 +1,6 @@
 set title 'Time saved by SPDY from HTTP (site by site avg.)'
-set term png
-set output 'plot9.png'
+set term eps
+set output 'plot9.eps'
 set xlabel 'Site'
 set ylabel 'Time Saved (seconds)'
 set nokey
