@@ -20,7 +20,7 @@
     urlcolor=black
 }
 
-\title{An Investigation of the SPDY Protocol}
+\title{An Analysis of the SPDY Protocol as a Candidate for HTTP/2.0}
 \date{\today}
 \author{Brian Stack\thanks{ bis12@case.edu, Case Western Reserve University,
 Cleveland, OH 44106}, Tom Dooner\thanks{ ted27@case.edu }}
@@ -83,12 +83,11 @@ which these request/response pairs are transmitted.
 The current self-imposed deadline for HTTP/2.0 is July
 2013~\cite{httpbis-charter}.  So far, three likely starting points for
 the specification have been proposed: Google's SPDY, Microsoft's Speed +
-Mobility, and a "Network-Friendly" proposal from a handful of Open Source
+Mobility, and a ``Network-Friendly'' proposal from a handful of Open Source
 authors. The three will be briefly outlined beginning in
 \S\ref{sec:background/spdy} and then the remainder of the paper will focus on
 measurements of the most viable candidate for HTTP/2.0, SPDY.
 
-% TODO: Expand on these for the full paper!
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection{SPDY}
 \label{sec:background/spdy}
@@ -115,17 +114,17 @@ protocol (recommended to be TCP) and provides a way for HTTP request/response
 pairs to be issued and received out of order over a single transport layer
 connection.  This provides an expected performance improvement of HTTP/1.1 by
 not requiring multiple connections to the host to be made in order to
-parallelize resource acquisition. There are 2 types of frames, first is control
-frames which are responsible for managing the lifecycle of a stream, which we
-will define soon.  Next is the data frame which is used simply to transmit data
-also allowing for streaming.
+parallelize resource acquisition. There are 2 types of frames: control
+frames and data frames. Control frames which are responsible for managing the
+lifecycle of a stream whereas data frames simply transmit data.
 \item[Streaming] Streams are bidirectional and are used to send out of order
 responses to requests. Importantly, streams can have priorities set by the
 creator of the stream.  This, in conjunction with server-push (defined next)
-allows for more important assets to be sent over the wires first.  An example of
-the usefulness of this feature is a webpage with many images that are
-unimportant for the actual content and layout of the page.  In that case, the
-images could be given a low priority and sent last.
+allows for more important assets (images, javascripts, stylesheets, etc.) to be
+sent over the wires first.  An example of the usefulness of this feature is a
+webpage with many images that are unimportant for the actual content and layout
+of the page.  In that case, the images could be given a low priority and sent
+last.
 \item[Server-Push] Once a server receives a request for an asset, if it is aware
 of closely connected assets, it may send them behind the original response,
 without waiting for the client to request them.  This will pre-populate the
@@ -133,7 +132,9 @@ cache of the client and save a round trip time for each item.
 \item[Header Compression with Dictionary] If there are many small assets on a
 webpage, then a significant portion of the transmitted bytes will be due to HTTP
 headers rather than the actual content.  If this can be compressed, much
-bandwidth is saved~\cite{binoy}.
+bandwidth is saved~\cite{binoy}. Furthermore, bandwidth for large headers (such
+as cookies) will be saved by assuming headers present for future requests on
+the same stream and in new streams once initialized.
 \end{description}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -143,10 +144,13 @@ bandwidth is saved~\cite{binoy}.
 This proposal~\cite{sm} comes from Microsoft.  It shares much in common with
 SPDY, but with a few major differences. First is that rather than defining
 their own session layer, Microsoft S+M relies on WebSockets for a session
-layer.  In addition (this is very important), S+M uses HTTP to negotiate the
-protocol upgrade rather than SPDY's use of SSL/TLS to do this same thing. This
-adds quite a bit of latency to beginning the actual communication and is one of
-the reasons that Facebook endorsed SPDY~\cite{fbook}.
+layer.  In addition, S+M uses an HTTP header to negotiate the protocol upgrade
+rather than SPDY's use of the SSL/TLS handshake to do this same thing. This
+adds another round trip after the connection is established, and requires the
+endpoint to analyze the HTTP headers. This is friendly to intermediate proxies
+that do not support S+M, but it adds additional latency (1 RTT) to beginning
+the actual communication and is one of the reasons that Facebook endorsed SPDY
+over S+M~\cite{fbook}.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection{Network-Friendly}
@@ -169,7 +173,9 @@ with all three of the currently viable proposals.
 \end{itemize}
 
 Overall, this proposal is aimed at making it easier for network appliances such
-as HTTP reverse-proxies to inspect and route incoming HTTP traffic.
+as HTTP reverse-proxies to inspect and route incoming HTTP traffic. However,
+the Network-Friendly approach has no widely-available client or server
+implementations, so currently it is a much less mature proposal than SPDY.
 
 Together these make for a promising platform for the next version of HTTP.  As
 stated earlier, this is the most likely starting point for the new protocol. It
@@ -196,13 +202,13 @@ added cost in terms of development time to support this protocol everywhere?
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 This project sets out to answer that question in two fashions. First, we will
 perform an in-depth examination of what is the limiting factor of current
-HTTP/1.1 including a review of literature in the area and a characterization of
-real-world web page asset size distribution in \S\ref{sec:assets} (and
-how we predict the same assets will load if loaded over SPDY). Since SPDY can
-combine asset requests into a single multiplexed TCP connection, we identify
-this as a significant source of performance improvement over HTTP. We will
-perform this by collecting the assets from the top Alexa sites with the Web
-Asset Scraper described in \S\ref{sec:research/scraper}.
+HTTP/1.1 including a characterization of real-world web page asset size
+distribution in \S\ref{sec:assets} and how we predict the same assets will load
+if loaded over SPDY. Since SPDY can combine asset requests into a single
+multiplexed TCP connection, we identify this as a significant source of
+performance improvement over HTTP. We will perform this by collecting the
+assets from the top Alexa sites with the Web Asset Scraper described in
+\S\ref{sec:research/scraper}.
 
 But how will \textit{real} web sites perform when their assets are multiplexed?
 Since only a handful of (already optimized) sites implement SPDY, we must
@@ -216,15 +222,30 @@ proposed in \S\ref{sec:research/client-server}.
 \label{sec:research/scraper}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 The server described in \S\ref{sec:research/server} needs to correctly simulate
-real world webpages. In order to facilitate this, websites from the Alexa
-rankings\footnote{\url{http://www.alexa.com}} have been scraped and the size and
-number of assets on each recorded.  This database will be accessed by the server
-upon each request in order to determine which data to return.  Great
-consideration was taken to make sure that this data accurately represents the
-state of the web, including executing javascript from each page in a headless
-browser in order to find dynamically loaded assets. This is not part
-of the proposed project as the work has already been completed in conjunction
-with another student.
+real world webpages. In order to achieve this, we created a web scraping tool
+which scraped websites chosen from the Alexa most popular websites
+list\footnote{\url{http://www.alexa.com}} and recorded the size and number of
+assets into a database.  This database will be accessed by the server upon each
+request in order to determine which data to return.  In order to accurately
+represent the original websites (and the state of the web), we employed a
+headless web browser PhantomJS\footnote{\url{http://phantomjs.org}} which
+mimicked a user's browser and thus requested all assets needed to render a web
+page, even the dynamically loaded ones buried in CSS rules or Javascript.
+
+We desire to record information that will allow us to assess the performance
+characteristics of SPDY for each website we scrape. We recorded, for each
+asset, the source IP we downloaded the asset from, the SSL certificate (if any)
+for the connection on which we downloaded the asset, and the asset's filename
+and filesize.
+
+Not every website supports SSL, and the Alexa list ranks websites by hostname
+combining SSL and non-SSL traffic. Since we are not measuring the time to
+download the asset, we can default to SSL for websites that support it, as we
+can determine useful information about the owner of assets from the SSL
+certificate. For sites that do not support SSL, we will request the non-SSL
+HTTP hostname.
+
+From this data, we analyzed the theoretical benefit of asset combination for SPDY in Section \ref{sec:assets}.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection{Client/Server Implementation}
@@ -291,7 +312,97 @@ back.
 \section{Asset Characterization}
 \label{sec:assets}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-here is where we will discuss the asset measurement stuff.
+\subsection{SPDY Combination Strategy}
+SPDY's most complex new feature is the ability to multiplex requests for assets
+over a single TCP connection. In this way, a web page's assets can benefit from
+a warmed-up TCP connection which has passed the beginning of the TCP slow start
+algorithm. Since SPDY is currently built atop SSL, SPDY can only combine assets
+with a mutually-agreeable SSL certificate. The assets will be combined into
+separate, interleaved streams over the same TCP connection, thus ideally
+obtaining complete utilization of the connection and the benefit from TCP's
+eventual discovery of an accurate congestion window.
+
+In order to measure the efficiency of SPDY's asset combination, we must
+determine what metric benefits from combining assets. The authors of SPDY claim
+that the main benefit from asset combination is the reduction of network
+connections required~\cite{spdy-whitepaper}.
+
+Although the HTTP/1.1 specification allows for up to two simultaneous
+connections to servers, modern browsers willfully violate it in service of page
+load speed and will happily open up to six connections to each host. Websites
+have also been pushing the limits by creating semantically equivalent hostnames
+for asset servers (i.e. assets1.example.com, assets2.example.com, etc.) so
+browsers will open six connections to each. Thus, browsers may wind up opening
+hundreds of connections immediately upon loading a page -- thus dishonoring the
+intent of TCP slow start.
+
+SPDY's asset combination addresses this. In this section we will measure the
+difference in the number of connections required to load each page under two
+different assumptions: first that site owners could combine all assets with
+mutually-agreeable SSL certificates into one SPDY connection and second that
+site owners would combine all assets served by the same IP address \textit{and}
+with mutually-agreeable SSL certificates into one SPDY connection. Logically,
+the first method is an upper bound for the number of connections we can save,
+we estimate that the second method is more accurate for most websites but is a
+lower bound for websites which employ CDNs or asset host sharding.
+
+\subsection{SSL-only Asset Combination}
+\begin{figure}[h!]
+\centering
+\includegraphics[width=0.4\textwidth,angle=270]{plots/asset_combination_only_ssl_ratio.eps}
+\caption{Connection Ratio -- SSL-only Combination Strategy}
+\label{fig:combination-ssl}
+\end{figure}
+The results in Figure \ref{fig:combination-ssl} assume that all assets
+described by a mutually-compatible SSL certificate are combined into one SPDY
+connection. Two assets have \textit{mutually-compatible} SSL certificates if
+their SSL certificates are valid for the host of the other asset (with either
+the Canonical Name or the Alternative Hostnames). In this way, we
+systematically combine assets by adding them to the largest group with which
+they are compatible. We then compare the number of asset groups (SPDY
+connections) with the number of assets (HTTP connections). The CDF of the ratio
+for the Alexa top 100,000 websites is plotted.
+
+As mentioned previously, this is an upper-bound for multiplexing savings.
+Results nonetheless are dramatic: about 90\% of sites could load using
+one-fifth the connections if combining assets via SPDY.
+
+\subsection{SSL-and-IP Asset Combination}
+\begin{figure}[h!]
+\centering
+\includegraphics[width=0.4\textwidth,angle=270]{plots/asset_combination_ssl_and_ip_ratio.eps}
+\caption{Connection Ratio -- SSL-and-IP Combination Strategy}
+\label{fig:combination-ssl-and-ip}
+\end{figure}
+The results in Figure \ref{fig:combination-ssl-and-ip} assume that all assets
+described by a mutually-compatible SSL certificate and that are downloaded from
+the same IP in practice are combined into one SPDY connection.
+
+Figure \ref{fig:combination-ssl-and-ip} shows that, in the common-to-worst
+case, 90\% of sites will halve the number of connections by switching to SPDY
+and 40\% could load using one-fifth the connections while only about 7\% see no
+improvement with SPDY.
+
+\subsection{Connection Sizes}
+\begin{figure}[h!]
+\centering
+\includegraphics[width=0.4\textwidth]{plots/asset_combination_connection_sizes.eps}
+\caption{Connection Sizes After Asset Combination}
+\label{fig:connection-sizes}
+\end{figure}
+
+Figure \ref{fig:connection-sizes} describes the size of connections when all
+assets are combined together as described in the SSL-and-IP combination
+strategy. 70\% of SPDY connections are noticeably larger than HTTP connections,
+up to almost an order of magnitude in some cases. Some assets do not benefit
+from SPDY's combination: small assets like Google Analytics tracking
+Javascript, or external libraries used on web pages such as jQuery. These
+comprise the left part of the SPDY curve.
+
+% we measure two approaches: splitting on SSL cert and IP and simply splitting
+% on SSL cert (as an upper bound for combination). The first method, ssl + ip,
+% is prone to some error due to the use of CDNs confusing our scraping of
+% assets.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Real World SPDY vs. HTTP}
