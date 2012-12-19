@@ -88,7 +88,6 @@ authors. The three will be briefly outlined beginning in
 \S\ref{sec:background/spdy} and then the remainder of the paper will focus on
 measurements of the most viable candidate for HTTP/2.0, SPDY.
 
-% TODO: Expand on these for the full paper!
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection{SPDY}
 \label{sec:background/spdy}
@@ -137,6 +136,7 @@ headers rather than the actual content.  If this can be compressed, much
 bandwidth is saved~\cite{binoy}.
 \end{description}
 
+% TODO: Expand on these for the full paper!
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection{Speed+Mobility}
 \label{sec:background/s+m}
@@ -354,6 +354,10 @@ they are compatible. We then compare the number of asset groups (SPDY
 connections) with the number of assets (HTTP connections). The CDF of the ratio
 for the Alexa top 100,000 websites is plotted.
 
+As mentioned previously, this is an upper-bound for multiplexing savings.
+Results nonetheless are dramatic: about 90\% of sites could load using
+one-fifth the connections if combining assets via SPDY.
+
 \subsection{SSL-and-IP Asset Combination}
 \begin{figure}[h!]
 \centering
@@ -364,6 +368,10 @@ for the Alexa top 100,000 websites is plotted.
 The results in Figure \ref{fig:combination-ssl-and-ip} assume that all assets
 described by a mutually-compatible SSL certificate and that are downloaded from
 the same IP in practice are combined into one SPDY connection.
+
+Figure \ref{fig:combination-ssl-and-ip} shows that, in the common-to-worst
+case, 90\% of sites will halve the number of connections by switching to SPDY
+and 40\% could load using one-fifth the connections.
 
 \subsection{Connection Sizes}
 \begin{figure}[h!]
