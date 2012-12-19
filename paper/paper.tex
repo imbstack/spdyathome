@@ -308,24 +308,26 @@ back.
 \subsection{SPDY Combination Strategy}
 SPDY's most complex new feature is the ability to multiplex requests for assets
 over a single TCP connection. In this way, a web page's assets can benefit from
-a warmed-up TCP connection which is not subject to the TCP slow start
+a warmed-up TCP connection which has passed the beginning of the TCP slow start
 algorithm. Since SPDY is currently built atop SSL, SPDY can only combine assets
 with a mutually-agreeable SSL certificate. The assets will be combined into
-separate streams over the same TCP connection, thus ideally obtaining complete
-utilization of the connection and the benefit from TCP's eventual discovery of
-an accurate congestion window.
+separate, interleaved streams over the same TCP connection, thus ideally
+obtaining complete utilization of the connection and the benefit from TCP's
+eventual discovery of an accurate congestion window.
 
 In order to measure the efficiency of SPDY's asset combination, we must
-determine the benefit of combining assets. The authors of SPDY claim that the
-main benefit from asset combination is the reduction of network connections
-required~\cite{spdy-whitepaper}. Although the HTTP/1.1 specification allows for
-up to two simultaneous connections to servers, modern browsers willfully
-violate it in service of page load speed and will happily open up to six
-connections to each host. Websites have also been pushing the limits by
-creating semantically equivalent hostnames (i.e. assets1.example.com,
-assets2.example.com, etc.) for different asset servers so browsers will open
-six connections to each. Thus, browsers may wind up opening hundreds of
-connections immediately upon loading a page.
+determine what metric benefits from combining assets. The authors of SPDY claim
+that the main benefit from asset combination is the reduction of network
+connections required~\cite{spdy-whitepaper}.
+
+Although the HTTP/1.1 specification allows for up to two simultaneous
+connections to servers, modern browsers willfully violate it in service of page
+load speed and will happily open up to six connections to each host. Websites
+have also been pushing the limits by creating semantically equivalent hostnames
+for asset servers (i.e. assets1.example.com, assets2.example.com, etc.) so
+browsers will open six connections to each. Thus, browsers may wind up opening
+hundreds of connections immediately upon loading a page -- thus dishonoring the
+intent of TCP slow start.
 
 SPDY's asset combination addresses this. In this section we will measure the
 difference in the number of connections required to load each page under two
