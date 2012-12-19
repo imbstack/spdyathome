@@ -114,10 +114,9 @@ protocol (recommended to be TCP) and provides a way for HTTP request/response
 pairs to be issued and received out of order over a single transport layer
 connection.  This provides an expected performance improvement of HTTP/1.1 by
 not requiring multiple connections to the host to be made in order to
-parallelize resource acquisition. There are 2 types of frames, first is control
-frames which are responsible for managing the lifecycle of a stream, which we
-will define soon.  Next is the data frame which is used simply to transmit data
-also allowing for streaming.
+parallelize resource acquisition. There are 2 types of frames: control
+frames and data frames. Control frames which are responsible for managing the
+lifecycle of a stream whereas data frames simply transmit data.
 \item[Streaming] Streams are bidirectional and are used to send out of order
 responses to requests. Importantly, streams can have priorities set by the
 creator of the stream.  This, in conjunction with server-push (defined next)
@@ -133,10 +132,11 @@ cache of the client and save a round trip time for each item.
 \item[Header Compression with Dictionary] If there are many small assets on a
 webpage, then a significant portion of the transmitted bytes will be due to HTTP
 headers rather than the actual content.  If this can be compressed, much
-bandwidth is saved~\cite{binoy}.
+bandwidth is saved~\cite{binoy}. Furthermore, bandwidth for large headers (such
+as cookies) will be saved by assuming headers present for future requests on
+the same stream and in new streams once initialized.
 \end{description}
 
-% TODO: Expand on these for the full paper!
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection{Speed+Mobility}
 \label{sec:background/s+m}
@@ -144,10 +144,13 @@ bandwidth is saved~\cite{binoy}.
 This proposal~\cite{sm} comes from Microsoft.  It shares much in common with
 SPDY, but with a few major differences. First is that rather than defining
 their own session layer, Microsoft S+M relies on WebSockets for a session
-layer.  In addition (this is very important), S+M uses HTTP to negotiate the
-protocol upgrade rather than SPDY's use of SSL/TLS to do this same thing. This
-adds quite a bit of latency to beginning the actual communication and is one of
-the reasons that Facebook endorsed SPDY~\cite{fbook}.
+layer.  In addition, S+M uses an HTTP header to negotiate the protocol upgrade
+rather than SPDY's use of the SSL/TLS handshake to do this same thing. This
+adds another round trip after the connection is established, and requires the
+endpoint to analyze the HTTP headers. This is friendly to intermediate proxies
+that do not support S+M, but it quite a bit of latency to beginning the actual
+communication and is one of the reasons that Facebook endorsed SPDY over
+S+M~\cite{fbook}.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection{Network-Friendly}
@@ -170,7 +173,9 @@ with all three of the currently viable proposals.
 \end{itemize}
 
 Overall, this proposal is aimed at making it easier for network appliances such
-as HTTP reverse-proxies to inspect and route incoming HTTP traffic.
+as HTTP reverse-proxies to inspect and route incoming HTTP traffic. However,
+the Network-Friendly approach has no widely-available client or server
+implementations, so currently it is a much less mature proposal than SPDY.
 
 Together these make for a promising platform for the next version of HTTP.  As
 stated earlier, this is the most likely starting point for the new protocol. It
